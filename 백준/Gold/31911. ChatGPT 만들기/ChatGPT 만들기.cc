@@ -44,7 +44,7 @@ int main()
     st = use[cur];
     st--; en -= 2; m--;
 
-    for (int i = m; i <= m + k - 1; i++) {
+    for (ll i = m; i <= m + k - 1; i++) {
         if (result.back() == ']') {
             if (i >= result.size()) cout << ".";
             else cout << result[i];
