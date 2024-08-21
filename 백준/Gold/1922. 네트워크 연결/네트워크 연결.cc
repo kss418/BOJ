@@ -4,16 +4,17 @@ using namespace std; typedef long long ll;
 using pll = pair<ll, ll>; ll n, m, k, t; string s;
 
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
-constexpr ll MAX = 101;
+constexpr ll MAX = 501;
 constexpr ll MOD = 1e9 + 7;
 
+template <typename T = ll> // T 반환 타입
 class _mst {
 public:
-    vector<vector<pll>> adj;
-    vector<ll> p, size; ll n, result = 0;
+    vector<vector<pair<T, ll>>> adj;
+    vector<ll> p, size; ll n; T result = 0;
     class edge {
     public:
-        ll s, e, c;
+        ll s, e; T c;
         bool operator>(const edge& ot) const {
             return c > ot.c;
         }
@@ -45,25 +46,28 @@ public:
         return 0;
     }
  
-    void add(ll st, ll en, ll c = 1) { // 양방향
+    void add(ll st, ll en, T c = 1) { // 양방향
         adj[st].push_back({ c, en });
         adj[en].push_back({ c, st });
         pq.push({ st, en, c });
         pq.push({ en, st, c });
     }
 
-    void init() {
+    void init(ll num = 0) { // num 만큼 적게 간선 연결
+        ll cnt = 0;
         while (!pq.empty()) {
             auto [st, en, c] = pq.top(); pq.pop();
-            if (same(st, en)) continue;
-            merge(st, en); result += c;
+            if (same(st, en)) continue; merge(st, en);
+            result += c; cnt++;
+            if (cnt == n - 1 - num) break;
         }
     }
 
-    ll ret() {
+    T ret() {
         return result;
     }
 };
+pll arr[MAX];
 
 int main()
 {
