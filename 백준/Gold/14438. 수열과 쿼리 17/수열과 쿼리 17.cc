@@ -1,71 +1,80 @@
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include <queue>
-using namespace std;
-long long arr[100003];
-long long seg[401000];
-int com, a, b, n, m;
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+using namespace std; typedef long long ll;
+using ull = unsigned long long;
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t; string s;
 
-int mk_seg(int st, int en, int node) {
-	if (st == en) {
-		seg[node] = arr[st];
-		return seg[node];
-	}
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MAX = 1010101;
+constexpr ll MOD = 1e9 + 7;
 
-	int mid = (st + en) / 2;
-	seg[node] = min(mk_seg(st, mid, node * 2), mk_seg(mid + 1, en, node * 2 + 1));
-	return seg[node];
-}
+class _mnseg {
+public:
+    ll n; vector <ll> arr, seg;
+    _mnseg(ll n) {
+        this->n = n;
+        arr.resize(n + 1); seg.resize(4 * n + 1);
+    }
 
-int query(int st, int en, int node, int l, int r) {
-	if (l > en || r < st) {
-		return 1000000000;
-	}
+    void con(ll idx, ll val) { arr[idx] = val; }
 
-	if (r >= en && st >= l) {
-		return seg[node];
-	}
+    void init() { init(1, n); }
+    ll init(ll l, ll r, ll node = 1) {
+        if (l == r) return seg[node] = arr[l];
+        ll mid = (l + r) >> 1;
+        seg[node] = min(init(l, mid, node * 2), init(mid + 1, r, node * 2 + 1)); 
+        return seg[node];
+    }
 
-	int mid = (st + en) / 2;
-	return min(query(st, mid, node * 2, l, r), query(mid + 1, en, node * 2 + 1, l, r));
-}
+    ll query(ll st, ll en) { return query(st, en, 1, n); }
+    ll query(ll st, ll en, ll l, ll r, ll node = 1) {
+        if (en < l || st > r) return INF;
+        if (st <= l && en >= r) return seg[node];
+        ll mid = (l + r) >> 1;
+        return min(query(st, en, l, mid, node * 2), query(st, en, mid + 1, r, node * 2 + 1));
+    }
 
-int update(int st, int en, int node,int index ,int value) {
-	if (index < st || index > en) {
-		return seg[node];
-	}
+    ll update(ll idx, ll val) { return update(idx, val, 1, n); }
+    ll update(ll idx, ll val, ll l, ll r, ll node = 1) {
+        if (idx < l || idx > r) return seg[node];
+        if (l == r) return seg[node] = val;
+        ll mid = (l + r) >> 1;
 
-	if (st == en) {
-		seg[node] = value;
-		return seg[node];
-	}
-
-	int mid = (st + en) / 2;
-	seg[node] = min(update(st, mid, node * 2, index, value), update(mid + 1, en, node * 2 + 1, index, value));
-	return seg[node];
-}
+        seg[node] = min(update(idx, val, l, mid, node * 2), update(idx, val, mid + 1, r, node * 2 + 1));
+        return seg[node];
+    }
+};
+ll arr[MAX];
 
 int main() {
-	cin.tie(0);
-	cout.tie(0);
-	ios::sync_with_stdio(false);
+    fastio;
 
-	cin >> n;
-	for (int i = 1; i < n + 1; i++) {
-		cin >> arr[i];
-	}
-	cin >> m;
-	mk_seg(1, n, 1);
+    cin >> n;
+    _mnseg seg(n);
 
-	while (m--) {
-		cin >> com >> a >> b;
-		if (com == 1) {
-			update(1, n, 1, a, b);
-		}
-		else{
-			cout << query(1, n, 1, a, b) << "\n";
-		}
-	}
-	return 0;
+    for (int i = 1; i <= n; i++) {
+        cin >> arr[i];
+        seg.con(i, arr[i]);
+    }
+    seg.init();
+
+    cin >> m;
+    while (m--) {
+        ll num; cin >> num;
+        if (num == 1) {
+            ll idx, v;
+            cin >> idx >> v;
+            seg.update(idx, v);
+        }
+        else {
+            ll st, en;
+            cin >> st >> en;
+            cout << seg.query(st, en) << "\n";
+        }
+    }
+
+
+
+    return 0;
 }
