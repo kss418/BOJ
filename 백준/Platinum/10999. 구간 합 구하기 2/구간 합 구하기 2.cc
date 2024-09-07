@@ -1,96 +1,99 @@
-#include <iostream>
-#include <algorithm>
-#include <vector>
-using namespace std;
-int n;
-const int len = 1000001;
-long long arr[len], seg[4 * len], lazy[4 * len];
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+using namespace std; typedef long long ll;
+using ull = unsigned long long;
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t; string s;
 
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MAX = 1010;
+constexpr ll MOD = 1e9 + 7;
 
-void prop(int st, int en, int node) {
-    if (lazy[node] != 0) {
-        if (st < en) {
+class _prop {
+public:
+    vector<ll> seg, lazy, arr; ll n;
+
+    _prop(ll n) {
+        this->n = n; arr.resize(n + 1);
+        seg.resize(4 * n + 1); lazy.resize(4 * n + 1);
+    }
+
+    void con(ll idx, ll val) {  arr[idx] = val; }
+
+    void init() { init(1, n); }
+    ll init(ll l, ll r, ll node = 1) {
+        if (l == r) return seg[node] = arr[l];
+        ll mid = (l + r) >> 1;
+        seg[node] = init(l, mid, node * 2) + init(mid + 1, r, node * 2 + 1);
+        return seg[node];
+    }
+
+    void propagate(ll l, ll r, ll node) {
+        if (!lazy[node]) return;
+        if (l != r) {
             lazy[node * 2] += lazy[node];
             lazy[node * 2 + 1] += lazy[node];
         }
-        seg[node] += lazy[node] * (en - st + 1);
+        seg[node] += lazy[node] * (r - l + 1);
         lazy[node] = 0;
     }
-}
 
-void update(int st, int en, long long k, int l, int r, int node) {
-    prop(st, en, node);
+    void add(ll st, ll en, ll val) { add(st, en, val, 1, n); }
+    void add(ll st, ll en, ll val, ll l, ll r, ll node = 1) {
+        propagate(l, r, node);
 
-    if (en < l || st > r) {
-        return;
+        if (st > r || en < l) return;
+        if (l >= st && r <= en) {
+            lazy[node] += val; propagate(l, r, node);
+            return;
+        }
+
+        ll mid = (l + r) >> 1;
+        add(st, en, val, l, mid, node * 2);
+        add(st, en, val, mid + 1, r, node * 2 + 1);
+
+        seg[node] = seg[node * 2] + seg[node * 2 + 1];
     }
 
-    if (st >= l && en <= r) {
-        lazy[node] += k;
-        prop(st, en, node);
-        return;
+    ll query(ll st, ll en) { return query(st, en, 1, n); }
+    ll query(ll st, ll en, ll l, ll r, ll node = 1) {
+        propagate(l, r, node);
+
+        if (st > r || en < l) return 0;
+        if (l >= st && r <= en) return seg[node];
+
+        ll mid = (l + r) >> 1;
+        ll ret = query(st, en, l, mid, node * 2);
+        ret += query(st, en, mid + 1, r, node * 2 + 1);
+
+        return ret;
     }
-
-    int mid = (st + en) / 2;
-    update(st, mid, k, l, r, node * 2);
-    update(mid + 1, en, k, l, r, node * 2 + 1);
-    seg[node] = seg[node * 2] + seg[node * 2 + 1];
-}
-
-long long query(int st, int en, int l, int r, int node) {
-    prop(st, en, node);
-
-    if (en < l || st > r) {
-        return 0;
-    }
-
-    if (st >= l && en <= r) {
-        return seg[node];
-    }
-
-    int mid = (st + en) / 2;
-    return query(st, mid, l, r, node * 2) + query(mid + 1, en, l, r, node * 2 + 1);
-}
-
-long long mk_seg(int st, int en, int node) {
-    if (st == en) {
-        seg[node] = arr[st];
-        return seg[node];
-    }
-
-    int mid = (st + en) / 2;
-    seg[node] = mk_seg(st, mid, node * 2) + mk_seg(mid + 1, en, node * 2 + 1);
-    return seg[node];
-}
-
+};
 
 int main() {
-    cin.tie(0);
-    cout.tie(0);
-    ios_base::sync_with_stdio(0);
-
-
-    int m, k;
+    fastio;
     cin >> n >> m >> k;
-    for (int i = 1; i <= n; i++) {
-        cin >> arr[i];
-    }
-    mk_seg(1, n, 1);
+    _prop seg(n);
 
-    int com, st, en;
-    long long value;
-    for (int i = 0; i < m + k; i++) {
-        cin >> com;
-        if (com == 1) {
-            cin >> st >> en >> value;
-            update(1, n, value, st, en, 1);
+    for (int i = 1; i <= n; i++) {
+        cin >> t; seg.con(i, t);
+    }
+    seg.init();
+
+    for (int i = 1; i <= m + k; i++) {
+        ll num, s, e, v;
+        cin >> num;
+        if (num == 1) {
+            cin >> s >> e >> v;
+            seg.add(s, e, v);
         }
         else {
-            cin >> st >> en;
-            cout << query(1, n, st, en, 1) << "\n";
+            cin >> s >> e;
+            cout << seg.query(s, e) << "\n";
         }
     }
+    
+
 
     return 0;
 }
-
