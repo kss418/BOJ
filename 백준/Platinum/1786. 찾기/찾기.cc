@@ -1,69 +1,62 @@
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include <cstring>
-#include <set>
-#include <queue>
-#include <deque>
-#include <cmath>
-#include <stack>
-#include <string>
-#include <map>
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
 using namespace std; typedef long long ll;
-typedef pair <int, int> pi; typedef pair <ll, ll> pll;
+using ull = unsigned long long;
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
 ll n, m, k, t; string s;
 
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MAX = 201010;
+constexpr ll MOD = 998244353;
 
-const ll INF = 0x3f3f3f3f3f3f3f3f;
-const int MAX = 1010101;
-vector <int> result;
-int fail[MAX];
+class _kmp { // 0-based index
+public:
+    string s; ll n;
+    vector <ll> f;
 
+    _kmp(string& s) {
+       this->s = s; this->n = s.size();
+    }
 
-void f(string s) {
-	int j = 0;
-	for (int i = 1; i < s.size(); i++) {
-		while (j > 0 && s[i] != s[j]) { 
-			j = fail[j - 1];
-		}
+    void init(string& m){
+        ll nxt = 0; f.resize(m.size(), 0);
+        for(int cur = 1;cur < m.size();cur++){
+            while(nxt && m[cur] != m[nxt]) nxt = f[nxt - 1];
+            if(m[cur] == m[nxt]) f[cur] = ++nxt;
+        }
+    }
 
-		if (s[i] == s[j]) {
-			fail[i] = ++j;
-		}
-	}
-}
+    vector <ll> ret(string& m){ // index 반환
+        init(m); vector <ll> r;
+        ll nxt = 0;
+        for(int cur = 0;cur < n;cur++){
+            while(nxt && s[cur] != m[nxt]) nxt = f[nxt - 1];
+            if(s[cur] == m[nxt]) nxt++;
+            if(nxt == m.size()){
+                r.push_back(cur - nxt + 1);
+                nxt = f[nxt - 1];
+            }
+        }
 
+        return r;
+    }
+};
 
 int main() {
-	cin.tie(0);
-	cout.tie(0);
-	ios_base::sync_with_stdio(false);
+    fastio;
 
-	string a;
-	getline(cin, a);
-	getline(cin, s);
-	f(s);
+    string a,b;
+    getline(cin, a);
+    getline(cin, b);
+    _kmp kmp(a);
+    
+    vector <ll> ret = kmp.ret(b);
+    cout << ret.size() << "\n";
+    for(auto& i : ret) cout << i + 1 << " ";
 
-	int j = 0;
-	for (int i = 0; i < a.size(); i++) {
-		while (j > 0 && a[i] != s[j]) {
-			j = fail[j - 1];
-		}
 
-		if (a[i] == s[j]) {
-			j++;
-		}
-
-		if (j == s.size()) {
-			result.push_back(i - j + 1);
-			j = fail[j - 1];
-		}
-	}
-
-	cout << result.size() << "\n";
-	for (auto i : result) {
-		cout << i + 1 << " ";
-	}
-	
-	return 0;
+    return 0;
 }
