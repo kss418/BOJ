@@ -32,7 +32,10 @@ int main() {
 
     for(int i = 1;i <= sqrt(2 * MAX) + 1;i++){
         sum[i][0] = 1;
-        for(int j = 1;j < MAX;j++) sum[i][j] = sum[i][j - 1] + dp[i][j];
+        for(int j = 1;j < MAX;j++) {
+            sum[i][j] = sum[i][j - 1] + dp[i][j];
+            sum[i][j] %= MOD;
+        }
     }
 
 
@@ -49,11 +52,12 @@ int main() {
         for(int i = 1;i < c - 1;i++){
             ll mx = min<ll>(i * (i + 1) / 2, n);
             ll mn = max(i * (i + 1) / 2 - m, 0ll);
-            if(mn) result += sum[i][mx] - sum[i][mn - 1];
+            if(mn) result += (sum[i][mx] - sum[i][mn - 1] + MOD) % MOD;
             else result += sum[i][mx];
+            result %= MOD;
         }
 
-        cout << result << "\n";
+        cout << result % MOD << "\n";
     }
 
 
