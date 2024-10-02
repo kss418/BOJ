@@ -11,13 +11,13 @@ ll n, m, k, t; string s;
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MAX = 50101;
 constexpr ll MOD = 1e9 + 7;
-ll dp[401][MAX], sum[401][MAX];
+ll dp[501][MAX], sum[501][MAX];
  
 int main() {
     fastio;
     
     dp[0][0] = 1;
-    for(int i = 1;i <= sqrt(2 * MAX) + 1;i++){
+    for(int i = 1;i <= 500;i++){
         dp[i][0] = 1;
         for(int j = 1;j < MAX;j++){
             dp[i][j] += dp[i - 1][j] % MOD;
@@ -30,7 +30,7 @@ int main() {
         }
     }
 
-    for(int i = 1;i <= sqrt(2 * MAX) + 1;i++){
+    for(int i = 1;i <= 500;i++){
         sum[i][0] = 1;
         for(int j = 1;j < MAX;j++) {
             sum[i][j] = sum[i][j - 1] + dp[i][j];
