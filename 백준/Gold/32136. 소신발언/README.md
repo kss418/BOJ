@@ -4,7 +4,7 @@
 
 ### 성능 요약
 
-메모리: 4372 KB, 시간: 56 ms
+메모리: 4372 KB, 시간: 52 ms
 
 ### 분류
 
@@ -12,11 +12,11 @@
 
 ### 제출 일자
 
-2024년 8월 20일 21:46:06
+2024년 10월 9일 15:40:52
 
 ### 문제 설명
 
-<p style="text-align: center;"><img alt="" src="https://upload.acmicpc.net/68e62ade-1ff0-47b5-b919-30463224f184/-/preview/" style="width: 509px; height: 400px;"></p>
+<p style="text-align: center;"><img alt="" src="" style="width: 509px; height: 400px;"></p>
 
 <p>때아닌 한파로 목장에 있던 모든 소의 신발이 언 상태가 되어버렸다! 피돌이는 히터를 하나 설치해서 얼음을 녹이려고 한다.</p>
 
