@@ -19,10 +19,11 @@ constexpr ll MOD = 998244353;
 string st[MAX];
 ll dist[MAX][MAX][11][2];
 ll dx[4] = {0, 0, 1, -1}, dy[4] = {1, -1, 0, 0};
+bool inq[MAX][MAX][11][2];
 
 class node{
 public:
-    ll x, y, c, d, t;
+    ll x, y, c, t;
 };
 deque <node> q;
 
@@ -33,13 +34,13 @@ int main() {
     for(int i = 0;i < n;i++) cin >> st[i];
 
     memset(dist, 0x3f, sizeof(dist));
-    q.push_back({0, 0, 0, 1, 1});
+    q.push_back({0, 0, 0, 1});
+    inq[0][0][0][1] = 1; dist[0][0][0][1] = 1;
     
     while(!q.empty()){
-        auto [cx, cy, cc, cd, ct] = q.front(); q.pop_front();
-
-        if(cd >= dist[cy][cx][cc][ct]) continue;
-        dist[cy][cx][cc][ct] = cd;
+        auto [cx, cy, cc, ct] = q.front();
+        q.pop_front(); inq[cy][cx][cc][ct] = 0;
+        ll cd = dist[cy][cx][cc][ct];
 
         for(int i = 0;i < 4;i++){
             ll nx = cx + dx[i], ny = cy + dy[i];
@@ -47,19 +48,31 @@ int main() {
         
             if(st[ny][nx] == '1' && ct % 2){
                 if(dist[ny][nx][cc + 1][ct ^ 1] > cd + 1 && cc < k){
-                    q.push_back({nx, ny, cc + 1, cd + 1, ct ^ 1});
+                    dist[ny][nx][cc + 1][ct ^ 1] = cd + 1;
+                    if(!inq[ny][nx][cc + 1][ct ^ 1]){
+                        inq[ny][nx][cc + 1][ct ^ 1] = 1;
+                        q.push_back({nx, ny, cc + 1, ct ^ 1});
+                    }
                 }
             }
             
             if(st[ny][nx] == '0') {
                 if(dist[ny][nx][cc][ct ^ 1] > cd + 1){
-                    q.push_back({nx, ny, cc, cd + 1, ct ^ 1});
+                    dist[ny][nx][cc][ct ^ 1] = cd + 1;
+                    if(!inq[ny][nx][cc][ct ^ 1]){
+                        inq[ny][nx][cc][ct ^ 1] = 1;
+                        q.push_back({nx, ny, cc, ct ^ 1});
+                    }
                 }
             }
         }
 
         if(dist[cy][cx][cc][ct ^ 1] > cd + 1){
-            q.push_back({cx, cy, cc, cd + 1, ct ^ 1});
+            dist[cy][cx][cc][ct ^ 1] = cd + 1;
+            if(!inq[cy][cx][cc][ct ^ 1]){
+                inq[cy][cx][cc][ct ^ 1];
+                q.push_back({cx, cy, cc, ct ^ 1});
+            }
         }
     }
 
