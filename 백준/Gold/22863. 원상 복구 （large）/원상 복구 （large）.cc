@@ -48,7 +48,7 @@ public:
 int main() {
     fastio;
 
-    cin >> n >> m; _st st(MAX, 1e15 + 1);
+    cin >> n >> m; _st st(n, m);
     for(int i = 1;i <= n;i++) cin >> num[i];
     for(int i = 1;i <= n;i++) cin >> a[i];
 
