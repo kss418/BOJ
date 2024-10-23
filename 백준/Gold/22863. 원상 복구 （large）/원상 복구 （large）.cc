@@ -16,14 +16,14 @@ ll n, m, k, t; string s;
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MAX = 1010101;
 constexpr ll MOD = 998244353;
-ll a[MAX], inv[MAX], num[MAX];
+ll a[MAX], inv[MAX], arr[MAX];
+ll num[50][MAX];
 
 class _st {
 public:
-    ll n; vector <vector<ll>> num;
+    ll n; 
     _st(ll n, ll m) { //n 개수 m 깊이
         this->n = n;
-        num.resize(log2(m + 1) + 1, vector<ll>(n + 1, 0));
     }
 
     void add(ll st, ll en) {
@@ -49,14 +49,14 @@ int main() {
     fastio;
 
     cin >> n >> m; _st st(n, m);
-    for(int i = 1;i <= n;i++) cin >> num[i];
+    for(int i = 1;i <= n;i++) cin >> arr[i];
     for(int i = 1;i <= n;i++) cin >> a[i];
 
     for(int i = 1;i <= n;i++) inv[a[i]] = i;
     for(int i = 1;i <= n;i++) st.add(i, inv[i]);
     st.init();
 
-    for(int i = 1;i <= n;i++) cout << num[st.ret(i, m)] << " ";
+    for(int i = 1;i <= n;i++) cout << arr[st.ret(i, m)] << " ";
     
     
     return 0;
