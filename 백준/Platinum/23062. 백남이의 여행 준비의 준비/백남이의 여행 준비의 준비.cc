@@ -1,83 +1,74 @@
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include <cstring>
-#include <set>
-#include <queue>
-#include <deque>
-#include <cmath>
-#include <map>
-#include <stack>
+#include <bits/stdc++.h>
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+#define ordered_set tree<int, null_type, less<int>, rb_tree_tag,tree_order_statistics_node_update>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
 using namespace std; typedef long long ll;
-typedef pair<int, int> pi; typedef pair<ll, ll> pll;
-ll n, m, k, t; string s;
+using ld = long double;
+using ull = unsigned long long;
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, k, t; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MAX = 201010;
+constexpr ll MOD = 998244353;
 
 
-const ll INF = 0x3f3f3f3f3f3f3f3f;
-const int MAX = 4;
-vector <ll> arr, md;
+class _crt{
+public:
+    _crt(){} vector <pll> arr;
+    tll gcd(ll a, ll b) {
+        if (!b) return { a, 1, 0 };
+        auto[g, x, y] = gcd(b, a % b);
+        return { g, y, x - a / b * y };
+    }
 
+    void clear(){ arr.clear(); }
+    void add(ll a, ll m){ arr.push_back({a, m}); }
 
-tuple <ll,ll,ll> gcd(ll a, ll b) {
-	if (!b) return { a, 1, 0 };
-	ll g, x, y;
-	tie(g, x, y) = gcd(b, a % b);
-	return { g, y, x - a / b * y };
-}
+    ll mod(ll a, ll m){
+        a %= m; if(a >= 0) return a;
+        return a + m;
+    }
 
-ll inv(ll a, ll m) {
-	ll g, x, y;
-	tie(g, x, y) = gcd(a, m);
-	if (!a || g != 1) return -1;
-	return x;
-}
+    pll crt(pll a, pll b){
+        auto[g, cx, cy] = gcd(a.y, b.y);
+        ll lcd = a.y / g * b.y;
+        if((b.x - a.x) % g) return {-1, -1};
+        ll r = mod((b.x - a.x) / g, b.y); 
+        ll l = mod(cx * r, b.y); 
+        ll ret = mod(a.x + l * a.y, lcd);
 
-ll mod(ll a, ll b) {
-	return (a % b >= 0) ? a % b : a % b + b;
-}
+        return { ret, lcd };
+    }
 
-pll crt(ll a1, ll m1, ll a2, ll m2) {
-	ll g = get<0>(gcd(m1, m2));
-	ll m = m1 / g * m2;
-	if ((a2 - a1) % g) return{ -1,-1 };
-	ll mul = mod((a2 - a1) / g, m2);
-	ll x = mod(get<1>(gcd(m1, m2)), m2) * mul % m2;
-	return { (a1 + x * m1) % m,m };
-}
-
-pll crt(const vector<ll>& a, const vector<ll>& m) {
-	ll fa = a[0], fm = m[0];
-	for (ll i = 1; i < m.size(); i++) {
-		ll ca, cm;
-		tie(ca,cm) = crt(fa, fm, a[i], m[i]);
-		if (cm == -1) return { -1,-1 };
-		tie(fa, fm) = tie(ca, cm);
-	}
-
-	return { fa,fm };
-}
+    pll ret(){
+        pll cur = arr[0];
+        for(int i = 1;i < arr.size();i++){
+            cur = crt(cur, arr[i]);
+            if(cur.x == -1) return {-1, -1};
+        }
+        return cur;
+    }
+};
+ll a[4], m[4];
 
 int main() {
-	cin.tie(0);
-	cout.tie(0);
-	ios::sync_with_stdio(false);
+    fastio;
 
-	cin >> t;
+    cin >> t; _crt crt;
 	while (t--) {
-		arr.clear();
-		md.clear();
-		for (int i = 1; i <= 3; i++) {
-			cin >> n;
-			arr.push_back(n);
-		}
-		for (int i = 1; i <= 3; i++) {
-			cin >> n;
-			md.push_back(n);
-		}
+		crt.clear();
+		for(int i = 1;i <= 3;i++) cin >> m[i];
+        for(int i = 1;i <= 3;i++) cin >> a[i];
+        for(int i = 1;i <= 3;i++) crt.add(a[i], m[i]);
 
-		cout << crt(md,arr).first << "\n";
+		cout << crt.ret().x << "\n";
 	}
-	
-	
-	return 0;
+
+    return 0;
 }
