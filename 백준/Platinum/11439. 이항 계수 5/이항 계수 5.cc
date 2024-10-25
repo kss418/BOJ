@@ -30,7 +30,6 @@ public:
             pv.resize(n + 1, -1); pv[1] = 1;
             for (ll i = 2;i <= n;i++) {
                 if(pv[i] != -1) continue; pv[i] = i;
-                pn.push_back(i);
                 for (int j = 2 * i; j <= n; j += i) {
                     if(pv[j] == -1) pv[j] = i;
                 }
