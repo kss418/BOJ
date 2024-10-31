@@ -76,7 +76,7 @@ public:
         else return cnt(val, l, mid, node * 2);
     }
 };
-map <ll, ll> an, bn;
+map <ll, ll> an, bn, cn;
 ll result[MAX];
 
 class node{
@@ -115,11 +115,11 @@ void dnc(ll s, ll e){
     dnc(s, mid); dnc(mid + 1, e);
  
     vector <node> uv, qv;
-    for(int i = mid + 1;i <= e;i++){
+    for(int i = s;i <= mid;i++){
         if(!query[i].num) uv.push_back(query[i]);
     }
 
-    for(int i = s;i <= mid;i++){
+    for(int i = mid + 1;i <= e;i++){
         if(query[i].num) qv.push_back(query[i]);
     }
     sort(all(uv), cmp); sort(all(qv), cmp);
@@ -139,7 +139,7 @@ void dnc(ll s, ll e){
 int main() {
     fastio;
 
-    cin >> n >> m; seg = {MAX};
+    cin >> n >> m; seg = {2 * MAX};
     for(int i = 1;i <= n;i++) {
         ll a, b, c; cin >> a >> b; c = a + b;
         query.push_back({a, b, c, 0, 0});
@@ -154,10 +154,11 @@ int main() {
         query.push_back({a - 1, INF, c, -1, i});
         av.push_back(a - 1); bv.push_back(b - 1);
     }
-    av.push_back(INF); bv.push_back(INF);
-    comp();
+    av.push_back(INF); bv.push_back(INF); 
+    comp(); 
     
-    sort(all(query)); dnc(0, query.size() - 1);
+    sort(all(query)); reverse(all(query));
+    dnc(0, query.size() - 1);
 
     for(int i = 1;i <= m;i++) cout << result[i] << "\n";
     
