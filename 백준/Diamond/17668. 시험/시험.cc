@@ -83,6 +83,7 @@ class node{
 public:
     ll a, b, c, num, idx;
     bool operator <(node& ot){
+        if(c == ot.c) return (bool)num > (bool)ot.num;
         return c < ot.c;
     }
 };
@@ -146,7 +147,7 @@ int main() {
     }
     
     for(int i = 1;i <= m;i++){
-        ll a, b, c; cin >> a >> b >> c; c--;
+        ll a, b, c; cin >> a >> b >> c;
         query.push_back({INF, INF, c, 1, i});
         query.push_back({a - 1, b - 1, c, 1, i});
         query.push_back({INF, b - 1, c, -1, i});
