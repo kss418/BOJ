@@ -74,18 +74,15 @@ int main() {
         arr.push_back({sum[i], uf.size(i)});
     }
 
+    ll result = 0;
     for(int i = 1;i <= arr.size();i++){
         auto&[v, si] = arr[i];
         for(int j = 0;j < k;j++){
             dp[i][j] = dp[i - 1][j];
-            if(j < si) continue;
-            dp[i][j] = max(dp[i][j], dp[i - 1][j - si] + v);
-        }
-    }
+            if(j >= si) dp[i][j] = max(dp[i][j], dp[i - 1][j - si] + v);
 
-    ll result = 0;
-    for(int i = 0;i < k;i++) {
-        result = max(result, dp[arr.size()][i]);
+            result = max(result, dp[i][j]);
+        }
     }
     
     cout << result;
