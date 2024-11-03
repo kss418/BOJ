@@ -18,13 +18,14 @@ ll n, m, k, t; string s;
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MAX = 201010;
 constexpr ll MOD = 998244353;
-map <ll, ll> xm, ym, zm;
-vector <ll> xv, yv, zv;
-ll seq;
+map <ll, ll> ym, xm;
+vector <ll> yv, xv;
+ll seq, dp[MAX];
 
 class _mxseg {
 public:
     ll n; vector <ll> arr, seg;
+    _mxseg() {}
     _mxseg(ll n) {
         this->n = n;
         arr.resize(n + 1); seg.resize(4 * n + 1);
@@ -61,9 +62,10 @@ public:
 
 class node{
 public:
-    ll x, y, z;
+    ll x, y, z, idx;
     bool operator <(node& ot){
-        return x < ot.x;
+        if(z == ot.z) return x < ot.x;
+        return z < ot.z;
     }
 };
 node a[MAX];
@@ -72,37 +74,62 @@ void init(){
     for(int i = 1;i <= m;i++) {
         xv.push_back(a[i].x);
         yv.push_back(a[i].y);
-        if(n == 3) zv.push_back(a[i].z);
     }
-    sort(all(xv)); sort(all(yv)); sort(all(zv));
-
+    sort(all(xv)); sort(all(yv));
+    
     for(auto& i : xv) if(!xm.count(i)) xm[i] = ++seq; seq = 0;
-    for(auto& i : yv) if(!ym.count(i)) ym[i] = ++seq; seq = 0;
-    for(auto& i : zv) if(!zm.count(i)) zm[i] = ++seq;
+    for(auto& i : yv) if(!ym.count(i)) ym[i] = ++seq; 
 
     for(int i = 1;i <= m;i++){
         a[i].x = xm[a[i].x];
         a[i].y = ym[a[i].y];
-        if(n == 3) a[i].z = zm[a[i].z];
     }
+}
+
+bool cmp(node a, node b){
+    return a.x < b.x;
+}
+
+_mxseg seg; ll pre[MAX];
+void dnc(ll s, ll e){
+    if(s == e) { dp[s] = max(dp[s], 1ll); return; }
+    ll mid = (s + e) >> 1;
+    dnc(s, mid); 
+
+    vector <node> uv, qv;
+    for(int i = s;i <= mid;i++) uv.push_back(a[i]);
+    for(int i = mid + 1;i <= e;i++) qv.push_back(a[i]);
+    sort(all(uv), cmp); sort(all(qv), cmp);
+
+    ll idx = 0;
+    for(auto& nxt : qv){
+        while(idx < uv.size() && uv[idx].x < nxt.x){
+            seg.update(uv[idx].y, dp[uv[idx].idx]); idx++;
+        }
+        dp[nxt.idx] = max(dp[nxt.idx], seg.query(0, nxt.y) + 1);
+    }
+    
+    for(int i = 0;i < uv.size();i++) seg.update(uv[i].y, 0);
+
+    dnc(mid + 1, e);
 }
 
 int main() {
     fastio;
 
-    cin >> n >> m; _mxseg seg(m);
+    cin >> n >> m; seg = {m};
     for(int i = 1;i <= m;i++) cin >> a[i].x;
     for(int i = 1;i <= m;i++) cin >> a[i].y;
     if(n == 3) for(int i = 1;i <= m;i++) cin >> a[i].z;
-    init();
+
+    init(); sort(a + 1, a + m + 1);
+    for(int i = 1;i <= m;i++) a[i].idx = i;
     
-    sort(a + 1, a + m + 1);
+    dnc(1, m); 
+
     ll result = 0;
-    for(int i = 1;i <= m;i++){
-        ll cur = seg.query(0, a[i].y - 1);
-        seg.update(a[i].y, cur + 1);
-        result = max(result, cur + 1);
-    }
+    for(int i = 1;i<= m;i++) result = max(result, dp[i]);
+    
 
     cout << result;
 
