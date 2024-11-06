@@ -18,7 +18,7 @@ ll n, m, k, t; string s;
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MAX = 201010;
 constexpr ll MOD = 998244353;
-constexpr ld eps = 1e-8;
+constexpr ld eps = 1e-9;
 
 int main() {
     fastio;
