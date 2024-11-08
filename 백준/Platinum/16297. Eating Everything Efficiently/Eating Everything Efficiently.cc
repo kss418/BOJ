@@ -20,7 +20,7 @@ constexpr ll MAX = 501010;
 constexpr ll MOD = 998244353;
 vector <ll> adj[MAX];
 ll a[MAX], ind[MAX];
-ld dp[MAX][61];
+ld dp[MAX][51];
 deque <ll> q;
 
 int main() {
@@ -38,7 +38,7 @@ int main() {
     while(!q.empty()){
         ll cur = q.front(); q.pop_front();
         for(auto& nxt : adj[cur]){
-            for(int i = 1;i <= 60;i++){
+            for(int i = 1;i <= 50;i++){
                 ld now = dp[cur][i - 1] + (a[nxt] / (ld)(1ll << (i - 1)));
                 dp[nxt][i] = max(now, dp[nxt][i]);
                 dp[nxt][i] = max(dp[nxt][i], dp[cur][i]);
