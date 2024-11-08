@@ -20,16 +20,6 @@ constexpr ll MAX = 5010;
 constexpr ll MOD = 1e9 + 7;
 ll dp[MAX][MAX], num[MAX];
 
-ll solve(ll cur, ll cnt){
-    ll& ret = dp[cur][cnt];
-    if(!cur && !cnt) return ret = 1;
-    else if(!cur || !cnt) return ret = 0;
-    if(ret != -1) return ret; ret = 0;
-
-    ret = (solve(cur - 1, cnt - 1) + solve(cur - 1, cnt) * cnt) % MOD;
-    return ret %= MOD;
-}   
-
 class _uf { 
 public:
     ll n; vector <ll> p, si;
@@ -67,10 +57,18 @@ int main() {
     fastio;
 
     cin >> n >> m; _uf uf(n); ll cnt = n;
-    memset(dp, -1, sizeof(dp));
+
+    dp[0][0] = 1;
+    for(int i = 1;i <= n;i++){
+        for(int j = 1;j <= n;j++){
+            dp[i][j] = (dp[i - 1][j - 1] % MOD) + (dp[i - 1][j] * j % MOD);
+            dp[i][j] %= MOD;
+        }
+    }
+
     for(int i = 0;i <= n;i++){
         for(int j = 0;j <= i;j++) {
-            num[i] += solve(i, j);
+            num[i] += dp[i][j];
             num[i] %= MOD;
         }
     }
