@@ -19,8 +19,8 @@ constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MAX = 501010; // PLZ CHK!
 constexpr ll MOD = 998244353;
 vector <pair<ll, char>> adj[MAX];
-ll mod[3] = { 1000000007, 998244353, 1000000009 };
-ll key[3] = {29, 31, 26};
+ll mod[2] = { 1000000007, 998244353 };
+ll key[2] = { 29, 31 };
 
 class _hash { // 0-based index
 public:
@@ -88,12 +88,12 @@ public:
     }
     ll ret(ll a){ return mo(pre[a]); }
 };
-_hash a[3], b[3];
+_hash a[2], b[2];
 ll result;
 
 void dfs(ll cur){
     bool flag = 1; ll si = b[0].size - 1;
-    for(int i = 0;i < 3;i++) {
+    for(int i = 0;i < 2;i++) {
         if(a[0].size > b[0].size) { flag = 0; break; }
         flag &= (a[i].ret() == b[i].ret(si - s.size() + 1, si));
     }
@@ -101,9 +101,9 @@ void dfs(ll cur){
 
     for(auto& i : adj[cur]){
         auto[nxt, c] = i;
-        for(int j = 0;j < 3;j++) b[j].push_back(c);
+        for(int j = 0;j < 2;j++) b[j].push_back(c);
         dfs(nxt);
-        for(int j = 0;j < 3;j++) b[j].pop_back();
+        for(int j = 0;j < 2;j++) b[j].pop_back();
     }
 }
 
@@ -116,11 +116,11 @@ int main() {
         cin >> s >> e >> c;
         adj[s].push_back({e, c});
     }
-    for(int i = 0;i < 3;i++)  a[i] = b[i] = { mod[i], key[i] };
+    for(int i = 0;i < 2;i++)  a[i] = b[i] = { mod[i], key[i] };
 
     cin >> s;
     for(auto& i : s){
-        for(int j = 0;j < 3;j++) a[j].push_back(i);
+        for(int j = 0;j < 2;j++) a[j].push_back(i);
     }
 
     dfs(1);
