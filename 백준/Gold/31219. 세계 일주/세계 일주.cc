@@ -68,14 +68,10 @@ int main() {
         ll cnt = 0; ld now = 0; seq.push_back(seq[0]);
         for(int i = 0;i < n;i++){
             now += dist(a[seq[i]], a[seq[i + 1]]);
-
-            for(int j = 0;j < i;j++){
-                cnt += li.ret({a[seq[j]], a[seq[j + 1]]}, {a[seq[i]], a[seq[i + 1]]});
-            }
         }
 
         seq.pop_back();
-        if(cnt == n) result = min(result, now);
+        result = min(result, now);
         if(!next_permutation(all(seq)))break;
     }
 
