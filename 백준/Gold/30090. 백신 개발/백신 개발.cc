@@ -21,31 +21,34 @@ constexpr ll MOD = 998244353;
 string st[MAX];
 vector <ll> seq;
 
-ll match(string& a, string& b){
+string match(string& a, string& b){
     for(int i = min(a.size(), b.size()) - 1;i >= 0;i--){
         string pre = a.substr(0, i + 1);
         string suf = b.substr(b.size() - i - 1, i + 1);
-        if(pre == suf) return i + 1;
+        string left = a.substr(i + 1, a.size() - i - 1);
+        if(pre == suf) return b + left;
     }
 
-    return 0;
+    return "0";
 }
 
 int main() {
     fastio;
 
-    ll all = 0, result = INF;
     cin >> n; seq.resize(n); iota(all(seq), 0);
-    for(int i = 0;i < n;i++) cin >> st[i], all += st[i].size();
+    for(int i = 0;i < n;i++) cin >> st[i];
 
+    ll result = INF;
     while(1){
-        ll now = all;
+        ll flag = 1;
+        string cur = st[seq[0]];
         for(int i = 1;i < n;i++){
-            string cur = st[seq[i]], pre = st[seq[i - 1]];
-            now -= match(cur, pre);
+            string nxt = st[seq[i]];
+            cur = match(nxt, cur);
+            if(cur == "0") flag = 0;
         }
 
-        result = min(result, now);
+        if(flag) result = min<ll>(result, cur.size());
         if(!next_permutation(all(seq))) break;
     }
 
