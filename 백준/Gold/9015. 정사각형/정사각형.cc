@@ -17,8 +17,13 @@ ll n, m, k, t; string s;
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MAX = 3010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
-map <pll, bool> num;
+unordered_map <string, bool> num;
 pll a[MAX];
+
+string h(pll a){
+    ll num = a.x + a.y * 100000 + 10000;
+    return to_string(num);
+}
 
 int main() {
     fastio;
@@ -28,7 +33,7 @@ int main() {
         cin >> n; ll result = 0; num.clear();
         for(int i = 1;i <= n;i++) {
             cin >> a[i].x >> a[i].y;
-            num[{a[i].x, a[i].y}] = 1;
+            num[h(a[i])] = 1;
         }
         
         for(int i = 1;i <= n;i++){
@@ -39,8 +44,8 @@ int main() {
                 pll v1 = {a[i].x - dy, a[i].y + dx};
                 pll v2 = {a[i].x + dx - dy, a[i].y + dy + dx};
 
-                if(!num.count(v1)) continue;
-                if(!num.count(v2)) continue;
+                if(!num.count(h(v1))) continue;
+                if(!num.count(h(v2))) continue;
                 result = max(result, dx * dx + dy * dy);
             }
         }
