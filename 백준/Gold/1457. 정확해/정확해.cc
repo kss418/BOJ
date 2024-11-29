@@ -20,93 +20,53 @@ constexpr ll MAX = 201010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
 ll a[MAX];
 
-class _es { // flag (1 == prime / 2 == phi / 4 == mobius)
+class _pow {
 public:
-    ll n; vector <ll> pv, pn, mov, phiv;
-    vector <bool> v;
-    _es(ll n, ll flag = 1) {
-        this->n = n;
+	_pow() {}
 
-        if(flag & 1){
-            pv.resize(n + 1, -1); pv[1] = 1;
-            for (ll i = 2;i <= n;i++) {
-                if(pv[i] != -1) continue; pv[i] = i;
-                pn.push_back(i);
-                for (int j = 2 * i; j <= n; j += i) {
-                    if(pv[j] == -1) pv[j] = i;
-                }
-            }
-        }
-
-        if(flag & 2){
-            phiv.resize(n + 1); iota(all(phiv), 0);
-            v.resize(n + 1);
-            for(ll i = 2;i <= n;i++){
-                if(v[i]) continue;
-                for(ll j = i;j <= n;j += i){
-                    phiv[j] /= i; phiv[j] *= (i - 1); v[j] = 1;
-                }
-            }
-        }
-
-        if(flag & 4){
-            mov.resize(n + 1, -2);
-            mov[0] = 0; mov[1] = 1;
-            for(ll i = 2;i <= n;i++){
-                if(mov[i] != -2) continue; mov[i] = -1;
-                for(ll j = 2 * i;j <= n;j += i) {
-                    if(mov[j] == -2) mov[j] = 1;
-                    mov[j] *= -1;
-                }
-                for(ll j = i * i;j <= n; j += i * i) mov[j] = 0;
-            }
-        }
+	ll ret(ll a, ll b){
+        ll ret = 1;
+        while(b){
+            if(b & 1) ret *= a;
+            a *= a; b >>= 1;
+        }      
+        return ret;
     }
 
-    ll mp(ll n) { return pv[n]; } // 최소 소인수 반환
-    vector<ll> ret() { return pn; } // 소수 벡터 반환
-    bool prime(ll n) { // 소수 판별
-        if (n == 1) return 0;
-        return pv[n] == n;
+	ll ret(ll a, ll b, ll p){
+        ll ret = 1;
+        while(b){
+            if(b & 1) ret *= a % p, ret %= p;
+            a *= a; a %= p; b >>= 1;
+        }      
+        return ret;
     }
-    ll mobius(ll n){ return mov[n]; }
-    ll phi(ll n){ return phiv[n]; }
-};
+}; _pow p;
 
-vector <ll> p;
-short cnt[11101010];
+ll div(ll n){
+    ll ret = 0;
+    for(int i = 1;i <= n;i++) ret += n / i;
+
+    return ret;
+}
+
+ll div_sq(ll n, ll m){
+    ll ret = 0;
+    for(int i = 1;p.ret(i, m) <= n;i++) ret += n / p.ret(i, m);
+
+    return ret;
+}
 
 int main() {
     fastio;
 
-    cin >> n >> m >> k; _es es(11101010);
+    cin >> n >> m >> k; 
+    ll a = div(n + m) - div(n - 1) - m - 1;
+    ll b = div_sq(n + m, k) - div_sq(n - 1, k);
+    if(n == 1) a++;
+
+    cout << a - b;
     
-    ll result = 0;
-    for(int i = n;i <= n + m;i++){
-        if(i == 1) continue;
-
-        ll cur = i;
-        while(cur != 1){
-            ll div = es.mp(cur);
-            if(!cnt[div]) p.push_back(div);
-            cnt[div]++;
-            cur /= div;
-        }
-
-        ll now = 1, all = 1;
-        for(auto& i : p){
-            ll num = cnt[i] / k;
-            all *= cnt[i] + 1;
-            now *= num + 1;
-        }
-        all--;
-        
-        result += all - now;
-        for(auto& i : p) cnt[i] = 0; p.clear();
-    }
-
-    cout << result;
-
      
     return 0;
 }
