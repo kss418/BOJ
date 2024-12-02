@@ -41,7 +41,7 @@ void bt(){
     if(num.size() == 4) return;
     
     for(int i = num.back().x;i < n;i++){
-        for(int j = 1;j <= k;j++){
+        for(int j = (i == num.back().x) ? num.back().y + 1 : 1;j <= k;j++){
             if(a[i + 1][j] || a[i - 1][j]) continue;
             a[i][j]++; num.push_back({i, j});
             bt();
