@@ -1,107 +1,94 @@
-#include <iostream>
-#include <algorithm>
-#include <vector>
-using namespace std;
-int n;
-const int len = 500001;
-long long arr[len], seg[4 * len], lazy[4 * len];
+#include <bits/stdc++.h>
+#include <ext/rope>
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+using namespace __gnu_cxx;
+#define ordered_set tree<int, null_type, less<int>, rb_tree_tag,tree_order_statistics_node_update>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; typedef long long ll;
+using ld = long double; using pld = pair<ld, ld>;
+using ull = unsigned long long; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t; string s;
 
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MAX = 501010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX], b[MAX];
 
-void prop(int st, int en, int node) {
-    if (lazy[node] != 0) {
-        if ((en - st + 1) % 2 == 1) {
-            seg[node] ^= lazy[node];
-        }
+class _prop { 
+public:
+    vector<ll> seg, lazy, arr; ll n;
 
-        if (st < en) {
+    _prop(ll n) {
+        this->n = n; arr.resize(n + 1);
+        seg.resize(4 * n + 1); lazy.resize(4 * n + 1);
+    }
+
+    void propagate(ll l, ll r, ll node) {
+        if (!lazy[node]) return;
+        if (l != r) {
             lazy[node * 2] ^= lazy[node];
             lazy[node * 2 + 1] ^= lazy[node];
         }
+
+        if((r - l + 1) % 2) seg[node] ^= lazy[node];
         lazy[node] = 0;
     }
-}
 
-void update(int st, int en, long long k, int l, int r, int node) {
-    prop(st, en, node);
+    void add(ll st, ll en, ll val) { add(st, en, val, 1, n); }
+    void add(ll st, ll en, ll val, ll l, ll r, ll node = 1) {
+        propagate(l, r, node);
 
-    if (en < l || st > r) {
-        return;
-    }
-
-    if (st >= l && en <= r) {
-        if ((en - st + 1) % 2 == 1) {
-            seg[node] ^= k;
+        if (st > r || en < l) return;
+        if (l >= st && r <= en) {
+            lazy[node] ^= val; propagate(l, r, node);
+            return;
         }
 
-        if (st != en) {
-            lazy[node * 2] ^= k;
-            lazy[node * 2 + 1] ^= k;
-        }
+        ll mid = (l + r) >> 1;
+        add(st, en, val, l, mid, node * 2);
+        add(st, en, val, mid + 1, r, node * 2 + 1);
 
-        return;
+        seg[node] = seg[node * 2] ^ seg[node * 2 + 1];
     }
 
-    int mid = (st + en) / 2;
-    update(st, mid, k, l, r, node * 2);
-    update(mid + 1, en, k, l, r, node * 2 + 1);
-    seg[node] = seg[node * 2] ^ seg[node * 2 + 1];
-}
+    ll query(ll st, ll en) { return query(st, en, 1, n); }
+    ll query(ll st, ll en, ll l, ll r, ll node = 1) {
+        propagate(l, r, node);
 
-long long query(int st, int en, int l, int r, int node) {
-    prop(st, en, node);
+        if (st > r || en < l) return 0;
+        if (l >= st && r <= en) return seg[node];
 
-    if (en < l || st > r) {
-        return 0;
+        ll mid = (l + r) >> 1;
+        ll ret = query(st, en, l, mid, node * 2);
+        ret ^= query(st, en, mid + 1, r, node * 2 + 1);
+
+        return ret;
     }
-
-    if (st >= l && en <= r) {
-        return seg[node];
-    }
-
-    int mid = (st + en) / 2;
-    return query(st, mid, l, r, node * 2) ^ query(mid + 1, en, l, r, node * 2 + 1);
-}
-
-long long mk_seg(int st, int en, int node) {
-    if (st == en) {
-        seg[node] = arr[st];
-        return seg[node];
-    }
-
-    int mid = (st + en) / 2;
-    seg[node] = mk_seg(st, mid, node * 2) ^ mk_seg(mid + 1, en, node * 2 + 1);
-    return seg[node];
-}
-
+};
 
 int main() {
-    cin.tie(0);
-    cout.tie(0);
-    ios_base::sync_with_stdio(0);
-
-
-    int m;
-    cin >> n;
-    for (int i = 1; i <= n; i++) {
-        cin >> arr[i];
-    }
-    mk_seg(1, n, 1);
+    fastio;
+    
+    cin >> n; _prop prop(n + 1);
+    for(int i = 1;i <= n;i++) cin >> a[i], prop.add(i, i, a[i]);
 
     cin >> m;
-    int com, st, en;
-    long long value;
-    for (int i = 0; i < m; i++) {
-        cin >> com;
-        if (com == 1) {
-            cin >> st >> en >> value;
-            update(1, n, value, st + 1, en + 1, 1);
+    while(m--){
+        ll op, l, r, v;
+        cin >> op >> l >> r; l++; r++;
+        if(op == 1){
+            cin >> v;
+            prop.add(l, r, v);
         }
-        else if (com == 2) {
-            cin >> st >> en;
-            cout << query(1, n, st + 1, en + 1, 1) << "\n";
-        }
+        else cout << prop.query(l, r) << "\n";
     }
-
+    
+    
     return 0;
 }
-
