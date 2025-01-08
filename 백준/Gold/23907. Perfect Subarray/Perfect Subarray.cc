@@ -18,23 +18,26 @@ ll n, m, k, t = 1; string s;
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MAX = 101010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
+constexpr ll MID = 10010101;
 ll a[MAX], sum[MAX], cnt;
-multiset <ll> num;
+ll num[20101010];
 
 void run(){
-    cin >> n; ll result = 0; num.clear();
+    cin >> n; ll result = 0;
     for(int i = 1;i <= n;i++) cin >> a[i];
     
-    num.insert(0);
+    num[MID] = 1;
     for(int i = 1;i <= n;i++) {
         sum[i] = sum[i - 1] + a[i];
         for(int j = 0;j * j <= 1e7 + 1;j++){
             ll now = sum[i] - j * j;
-            result += num.count(now);
+            if(now + MID < 0 || now + MID >= 20101010) continue;
+            result += num[now + MID];
         }
-        num.insert(sum[i]);
+        num[sum[i] + MID]++;
     }
 
+    for(int i = 1;i <= n;i++) num[sum[i] + MID] = 0;
     cout << "Case #" << ++cnt << ": " << result << "\n";
 }
 
