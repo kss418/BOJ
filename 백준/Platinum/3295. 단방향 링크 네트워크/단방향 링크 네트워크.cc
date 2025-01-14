@@ -24,7 +24,7 @@ ll a[MAX];
 class _bm { // 1-based index
 public:
     ll as, bs; vector<vector<ll>> adj;
-    vector<ll> av, bv; vector<bool> v;
+    vector<ll> av, bv, v;
 
     _bm(ll a, ll b) {
         as = a; bs = b;
@@ -48,13 +48,13 @@ public:
     }
 
     ll ret() {
-        fill(av.begin(), av.end(), -1);
-        fill(bv.begin(), bv.end(), -1);
+        memset(&av[0], -1, sizeof(av[0]) * av.size());
+        memset(&bv[0], -1, sizeof(bv[0]) * bv.size());
         ll result = 0;
 
         for (int i = 1; i <= as; i++) {
             if (av[i] != -1) continue;
-            fill(v.begin(), v.end(), 0);
+            memset(&v[0], 0, sizeof(v[0]) * v.size());
             if (dfs(i)) result++;
         }
 
