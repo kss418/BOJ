@@ -19,7 +19,7 @@ constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 101010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
-pll a[MAX];
+pll a[1010101];
 vector <ll> adj[MAX];
 ll result[MAX], ind[MAX];
 
