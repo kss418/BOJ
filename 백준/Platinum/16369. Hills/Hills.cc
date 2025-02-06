@@ -35,7 +35,10 @@ ll solve(ll cur, ll cnt, ll use){
         ll pre = (cur == 1) ? 0 : max(a[cur - 1] - a[cur] + 1, 0ll);
         ret = min(ret, solve(cur - 2, cnt - 1, 0) + nxt + pre);
 
-        pre = (cur > 2) ? max(a[cur - 2] - a[cur], 0ll) : 0;
+        if(cur > 2){
+            if(a[cur - 2] <= a[cur - 1]) pre = max(a[cur - 2] - a[cur], 0ll);
+            else pre = max(a[cur - 1] - a[cur] + 1, 0ll);
+        }
         pre = (cur == 2) ? max(a[cur - 1] - a[cur] + 1, 0ll) : pre;
         ret = min(ret, solve(cur - 2, cnt - 1, 1) + nxt + pre);
     }
