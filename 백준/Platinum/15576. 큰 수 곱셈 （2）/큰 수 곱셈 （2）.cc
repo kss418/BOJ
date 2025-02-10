@@ -19,94 +19,92 @@ constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 201010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
+ll a[MAX];
 
 class _fft{
-public:
-    const ld PI = acos(-1);
-    using cpd = complex <ld>;
-
-    void fft(vector <cpd>& v, cpd w){
-        ll n = v.size();
-        if(n == 1) return;
-
-        vector <cpd> even(n / 2), odd(n / 2);
-        for(int i = 0;i < n;i++)(i % 2 ? odd : even)[i / 2] = v[i];
-        fft(even, w * w); fft(odd, w * w);
-
-        cpd wp(1, 0);
-        for(int i = 0;i < n / 2;i++){
-            v[i] = even[i] + wp * odd[i];
-            v[i + n / 2] = even[i] - wp * odd[i];
-            wp *= w;
-        }
-    }  
-    vector <cpd> mul(vector <cpd>& a, vector <cpd>& b){
-        ll n = 1;
-        while(n < a.size() + 1 || n < b.size() + 1) n <<= 1;
-        n <<= 1; a.resize(n); b.resize(n);
-        vector <cpd> ret(n);
-        cpd w(cos(2 * PI / n), sin(2 * PI / n));
-        fft(a, w); fft(b, w);
-
-        for(int i = 0;i < n;i++) ret[i] = a[i] * b[i];
-        fft(ret, cpd(1, 0) / w);
-        for(int i = 0;i < n;i++){
-            ret[i] /= cpd(n, 0);
-            ret[i] = cpd(round(ret[i].real()), round(ret[i].imag()));
-        }
-
-        return ret;
-    }
+    public:
+        const ld PI = acos(-1);
+        using cpd = complex <ld>;
     
-    vector <ll> ret(string& a, string& b){
-        vector<cpd> ca = tf(a), cb = tf(b);
-        return ret(ca, cb);
-    }
+        void fft(vector <cpd>& v, bool inv = 0){
+            ll n = v.size();
+            for(int i = 1,j = 0;i < n;i++){
+                ll num = n >> 1ll;
+                while(!((j ^= num) & num)) num >>= 1ll;
+                if(i < j) swap(v[i], v[j]);
+            }
 
-    vector <ll> ret(vector<ll> &a, vector<ll>& b){
-        vector<cpd> ca = tf(a), cb = tf(b);
-        return ret(ca, cb);
-    }
+            for(int k = 1;k < n;k <<= 1ll){
+                ld a = PI / k * (inv ? 1 : -1);
+                cpd w(cos(a), sin(a));
+                for(int i = 0;i < n;i += 2 * k){
+                    cpd wp(1, 0);
+                    for(int j = 0;j < k;j++){
+                        cpd x = v[i + j], y = v[i + j + k] * wp;
+                        v[i + j] = x + y;
+                        v[i + j + k] = x - y;
+                        wp *= w;
+                    }
+                }
+            }
 
-    vector <ll> ret(vector <cpd>& a, vector <cpd>& b){
-        reverse(all(a)); reverse(all(b));
-        vector <cpd> c = mul(a, b);
-        ll carry = 0, i = 0; vector <ll> r;
-        for(i = 0;i < c.size();i++){
-            ll tmp = (ll)round(c[i].real()) + carry;
-            r.push_back(tmp % 10);
-            carry = tmp / 10;
+            if(inv) for(int i = 0;i < n;i++) v[i] /= n;
+        }  
+        
+        vector <cpd> mul(vector <cpd>& a, vector <cpd>& b){
+            ll n = 1;
+            while(n < a.size() + 1 || n < b.size() + 1) n <<= 1;
+            n <<= 1; a.resize(n); b.resize(n); vector <cpd> ret(n);
+            fft(a); fft(b);
+        
+            for(int i = 0;i < n;i++) ret[i] = a[i] * b[i];
+            fft(ret, 1);
+    
+            return ret;
         }
-
-        while(carry > 0){
-            r.push_back(carry % 10);
-            carry /= 10;
+        
+        vector <ll> carry(vector <cpd>& a, vector <cpd>& b){
+            reverse(all(a)); reverse(all(b));
+            vector <cpd> c = mul(a, b);
+            ll carry = 0, i = 0; vector <ll> r;
+            for(i = 0;i < c.size();i++){
+                ll tmp = (ll)round(c[i].real()) + carry;
+                r.push_back(tmp % 10);
+                carry = tmp / 10;
+            }
+    
+            while(carry > 0){
+                r.push_back(carry % 10);
+                carry /= 10;
+            }
+    
+            for(i = r.size() - 1;i >= 0 && !r[i];--i);
+            if(i < 0) return vector<ll>(1, 0);
+            while(r.size() > i + 1) r.pop_back();
+            reverse(all(r));
+    
+            return r;
         }
-
-        for(i = r.size() - 1;i >= 0 && !r[i];--i);
-        if(i < 0) return vector<ll>(1, 0);
-        while(r.size() > i + 1) r.pop_back();
-        reverse(all(r));
-
-        return r;
-    }
-
-    vector <cpd> tf(string& a){
-        vector <cpd> ret;
-        for(auto& i : a) ret.push_back({i - '0', 0});
-        return ret;
-    }
-
-    vector <cpd> tf(vector <ll>& a){
-        vector <cpd> ret;
-        for(auto& i : a) ret.push_back({i, 0});
-        return ret;
-    }
-};
+        
+        vector <cpd> tf(string& a){
+            vector <cpd> ret;
+            for(auto& i : a) ret.push_back({i - '0', 0});
+            return ret;
+        }
+        
+        vector <cpd> tf(vector <ll>& a){
+            vector <cpd> ret;
+            for(auto& i : a) ret.push_back({i, 0});
+            return ret;
+        }
+    };
 
 void run(){
     string a, b; cin >> a >> b; _fft fft;
-    for(auto& i : fft.ret(a, b)) cout << i;
+    vector <complex<ld>> va = fft.tf(a), vb = fft.tf(b);
+    vector <ll> ret = fft.carry(va, vb);
+
+    for(auto& i : ret) cout << i;
 }
 
 int main() {
