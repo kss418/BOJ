@@ -17,7 +17,7 @@ ll n, m, k, t = 1; string s;
 
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
-constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MAX = 301010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
 ll a[MAX], cnt, result;
 
