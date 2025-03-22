@@ -1,18 +1,24 @@
-from sys import stdin
-a, b = map(int,stdin.readline().split())
-num = [0]*a
-for i in range(a):
-    num[i] = int(stdin.readline())
+import sys
+input = sys.stdin.readline
 
-st = 1
-en = max(num)
-while en >= st:
-    mid = (en+st)//2
-    sum = 0
-    for i in range(a):
-        sum += num[i]//mid
-    if sum >= b:
-        st = mid + 1
-    else:
-        en = mid - 1
-print(en)
+n, m = list(map(int, input().rstrip().split()))
+a = [int(input().rstrip()) for _ in range(n)]
+
+def decision(cur):
+    cnt = 0
+    for i in a:
+        cnt += i // cur
+    return cnt >= m
+
+def maximazation():
+    lo = 1
+    hi = 2 ** 31 - 1
+    while lo < hi:
+        mid = (lo + hi + 1) // 2
+        if(decision(mid)):
+            lo = mid
+        else:
+            hi = mid - 1
+    return lo
+
+print(maximazation())
