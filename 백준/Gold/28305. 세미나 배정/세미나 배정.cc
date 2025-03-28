@@ -1,49 +1,51 @@
-#include <bits/stdc++.h>
-#define fastio cin.tie(0), cout.tie(0),ios::sync_with_stdio(0);
-using namespace std; typedef long long ll; 
-typedef pair<int, int> pi; typedef pair<ll, ll> pll; 
-typedef unsigned long long ull; ll n, m, k, t; string s;
-    
-const ll INF = 0x3f3f3f3f3f3f3f3f; 
-const ll MAX = 201010; 
-ll arr[MAX], num[MAX];
+#include <iostream>
+#include <algorithm>
+#include <deque>
+using namespace std;
+using ll = long long;
 
+const ll MAX = 201010;
+ll n, m, a[MAX], num[MAX];
 
-ll dt(ll cnt){
-    ll ch = 0;
-    
+bool decision(ll cur){
+    ll last = 0;
     for(int i = 1;i <= n;i++){
-        if(i <= cnt) ch = max(arr[i] - m + 1, 1ll);
-        else ch = max({arr[i] - m + 1, num[i - cnt] + m, 1ll});
-        num[i] = ch;
+        if(i <= cur) last = max(a[i] - m + 1, 1ll);
+        else last = max({a[i] - m + 1, num[i - cur] + m, 1ll});
+        num[i] = last;
+
+        ll diff = a[i] - num[i];
+        if(diff < 0) return 0;
     }
     
-    ll ret = 1;
-    for(int i = 1;i <= n;i++){
-        ll diff = arr[i] - num[i];
-        if(diff >= m || diff < 0) ret = 0;
-    }
-    
-    return ret;
+    return 1;
 }
-    
-    
-int main() { 
-    fastio;
-    
-    cin >> n >> m;
-    for(int i = 1; i <= n;i++) cin >> arr[i];
-    sort(arr + 1, arr + n + 1);
-    
-    ll st = 1, en = n;
-    while(st < en){
-        ll mid = (st + en) >> 1;
-        if(dt(mid)) en = mid;
-        else st = mid + 1;
+
+ll minimization(){
+    ll lo = 1, hi = 201010;
+    while(lo < hi){
+        ll mid = (lo + hi) / 2;
+        if(decision(mid)) hi = mid;
+        else lo = mid + 1;
     }
 
-    cout << en;
+    return lo;
+}
+
+int main(){
+    ios::sync_with_stdio(0); // fastio
+    cin.tie(0), cout.tie(0); // fastio
+
+    cin >> n >> m;
+    for(int i = 1;i <= n;i++) cin >> a[i];
+    sort(a + 1, a + n + 1);
     
-        
+    cout << minimization();
+
     return 0;
 }
+
+
+
+
+
