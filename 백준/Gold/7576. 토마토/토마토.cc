@@ -1,64 +1,69 @@
 #include <iostream>
+#include <queue>
 #include <algorithm>
-#include <deque>
-
 using namespace std;
+using ll = long long;
 
-int arr[1001][1001];
+const ll MAX = 1010;
+ll n, m, k;
+ll dx[4] = {0, 0, 1, -1}, dy[4] = {1, -1, 0, 0};
+ll d[MAX][MAX], a[MAX][MAX];
 
-int main() {
+const ll INF = 1e9;
+
+class node{
+public:
+    ll y, x, d;
+};
+queue <node> q;
+
+bool outrange(ll cy, ll cx){
+    if(cy <= 0 || cx <= 0 || cy > n || cx > m) return 1;
+    return a[cy][cx] == -1;
+}
 
 
-    int n, m, num,i,j;
+void bfs(){
+    while(!q.empty()){
+        auto [cy, cx, cd] = q.front(); q.pop();
+        for(int i = 0;i < 4;i++){
+            ll ny = cy + dy[i], nx = cx + dx[i];
+            if(outrange(ny, nx)) continue;
+            if(d[ny][nx] != INF) continue;
+            d[ny][nx] = cd + 1;
+            q.push({ny, nx, cd + 1});
+        }
+    }
+}
+
+
+int main(){
+    ios::sync_with_stdio(0); // fastio
+    cin.tie(0), cout.tie(0); // fastio
+
     cin >> m >> n;
-    for(i = 0;i < n;i++){
-        for(int j = 0;j < m; j++){
-        cin >> num;
-        arr[i][j] = num;
+    for(int i = 1;i <= n;i++){
+        for(int j = 1;j <= m;j++){
+            cin >> a[i][j];
+            d[i][j] = INF;
+
+            if(a[i][j] == 1){
+                d[i][j] = 0;
+                q.push({i, j, 0});
+            }
         }
     }
 
-    deque <pair <int,int>> q;
-    for(i = 0;i < n;i++){
-        for(int j = 0;j < m;j++){
-            if (arr[i][j] == 1){
-                q.push_back(make_pair(i,j));
-            }
+    bfs();
+    ll result = 0;
+    for(int i = 1;i <= n;i++){
+        for(int j = 1;j <= m;j++){
+            if(a[i][j] == -1) continue;
+            result = max(result, d[i][j]);
         }
     }
-    
-    int x[4] = {0,0,1,-1};
-    int y[4] = {-1,1,0,0};
-    pair <int,int> pairs;
 
-    while (q.size() > 0){
-        pairs = q.front();
-        q.pop_front();
-        for(i = 0;i < 4;i++){
-            if (pairs.first + x[i] < 0 || pairs.first + x[i] >= n || pairs.second + y[i] < 0 || pairs.second + y[i] >= m){
-                continue;
-            }
-            if (arr[pairs.first + x[i]][pairs.second + y[i]] != 0){
-                continue;
-            }
-            arr[pairs.first + x[i]][pairs.second + y[i]] = arr[pairs.first][pairs.second] + 1;
-            q.push_back(make_pair(pairs.first + x[i],pairs.second + y[i]));
-        }
-    }
-    int max = 0;
-    for(i = 0;i < n;i++){
-        for(j = 0;j < m;j++){
-            if (arr[i][j] == 0){
-                max = 0;
-                goto result;
-            }
-            if (arr[i][j] > max){
-                max = arr[i][j];
-            }
-        }
-    }
-    goto result;
-    result:
-    cout << max-1 << endl;
+    cout << (result == INF ? -1 : result);
+
     return 0;
 }
