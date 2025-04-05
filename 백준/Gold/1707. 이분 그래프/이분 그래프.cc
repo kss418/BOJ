@@ -1,58 +1,58 @@
-#include <bits/stdc++.h>
-#define fastio 	cin.tie(0), cout.tie(0),ios::sync_with_stdio(0);
-using namespace std; typedef long long ll;
-typedef pair<int, int> pi; typedef pair<ll, ll> pll;
-typedef unsigned long long ull;
-ll n, m, k, t; string s;
+#include <iostream>
+#include <queue>
+#include <vector>
+#include <algorithm>
+using namespace std;
+using ll = long long;
 
+const ll MAX = 20101;
+vector <ll> a[MAX];
+ll v[MAX], result, n, m;
 
-const ll INF = 0x3f3f3f3f3f3f3f3f;
-const int MAX = 20101;
-ll dp[MAX]; vector <ll> arr[MAX]; bool result;
-
-
-void dfs(ll cur,ll p,ll c){
-    if(dp[cur] != -1){
-        if(c != dp[cur]){
-            result = 0;
-        }
-        
-        return;
-    }
+void dfs(ll cur, ll num){
+    v[cur] = num;
     
-    dp[cur] = c;
-    for(auto nxt : arr[cur]){
-        if(nxt == p) continue;
-        dfs(nxt,cur,c ^ 1);
+    for(auto& nxt : a[cur]){
+        if(v[nxt] != -1){
+            if(v[nxt] != num ^ 1) result = 0;
+            continue;
+        }
+        dfs(nxt, num ^ 1); 
     }
 }
 
+void add(int s, int e){
+    // 양방향 간선 추가
+    a[s].push_back(e);
+    a[e].push_back(s);
+}
 
-int main() {
-	fastio;
-	
-	cin >> t;
-	while(t--){
-	    cin >> m >> n;
-	    result = 1;
-	    for(int i = 1; i <= m;i++) arr[i].clear();
-	    memset(dp,-1,sizeof(dp));
-	    for(int i = 1; i <= n;i++){
-	        ll st,en;
-	        cin >> st >> en;
-	        arr[st].push_back(en);
-	        arr[en].push_back(st);
-	    }
-	    
-	    for(int i = 1; i <= m;i++){
-	        if(dp[i] != -1) continue;
-	        dfs(i,0,0);
-	    }
-	    
-	    if(result) cout << "YES\n";
-	    else cout << "NO\n";
-	}
-   
-    
-	return 0;
+void solve(){
+    cin >> n >> m;
+
+    result = 1;
+    for(int i = 1;i <= n;i++) {
+        a[i].clear(); v[i] = -1;
+    }
+
+    while(m--){
+        ll s, e; cin >> s >> e;
+        add(s, e);
+    }
+
+    for(int i = 1;i <= n;i++){
+        if(v[i] != -1) continue;
+        dfs(i, 0);
+    }
+    cout << (result ? "YES" : "NO") << "\n";
+}
+
+int main(){
+    ios::sync_with_stdio(0); // fastio
+    cin.tie(0), cout.tie(0); // fastio
+
+    ll t; cin >> t;
+    while(t--) solve();
+
+    return 0;
 }
