@@ -17,7 +17,7 @@ def outrange(cy, cx):
 
 def bfs():
     while len(q) != 0:
-        cy, cx, cd = q.popleft()
+        cy, cx= q.popleft()
         for i in range(4):
             ny = cy + dy[i]
             nx = cx + dx[i]
@@ -25,8 +25,8 @@ def bfs():
                 continue
             if(d[ny][nx] != inf):
                 continue
-            d[ny][nx] = cd + 1
-            q.append((ny, nx, cd + 1))
+            d[ny][nx] = d[cy][cx] + 1
+            q.append((ny, nx))
 
 m, n = list(map(int, input().rstrip().split()))
 for i in range(n):
@@ -37,7 +37,7 @@ for i in range(n):
         if a[i][j] != 1:
             continue
         d[i][j] = 0
-        q.append((i, j, 0))
+        q.append((i, j))
 
 bfs()
 
