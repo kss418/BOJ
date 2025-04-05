@@ -5,15 +5,13 @@ using namespace std;
 using ll = long long;
 
 const ll MAX = 1010;
-ll n, m, k;
-ll dx[4] = {0, 0, 1, -1}, dy[4] = {1, -1, 0, 0};
-ll d[MAX][MAX], a[MAX][MAX];
-
 const ll INF = 1e9;
+ll dx[4] = {0, 0, 1, -1}, dy[4] = {1, -1, 0, 0};
+ll d[MAX][MAX], a[MAX][MAX], n, m;
 
 class node{
 public:
-    ll y, x, d;
+    ll y, x;
 };
 queue <node> q;
 
@@ -25,13 +23,13 @@ bool outrange(ll cy, ll cx){
 
 void bfs(){
     while(!q.empty()){
-        auto [cy, cx, cd] = q.front(); q.pop();
+        auto [cy, cx] = q.front(); q.pop();
         for(int i = 0;i < 4;i++){
             ll ny = cy + dy[i], nx = cx + dx[i];
             if(outrange(ny, nx)) continue;
             if(d[ny][nx] != INF) continue;
-            d[ny][nx] = cd + 1;
-            q.push({ny, nx, cd + 1});
+            d[ny][nx] = d[cy][cx] + 1;
+            q.push({ny, nx});
         }
     }
 }
@@ -49,7 +47,7 @@ int main(){
 
             if(a[i][j] == 1){
                 d[i][j] = 0;
-                q.push({i, j, 0});
+                q.push({i, j});
             }
         }
     }
