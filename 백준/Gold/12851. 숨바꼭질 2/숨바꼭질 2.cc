@@ -1,53 +1,38 @@
 #include <iostream>
-#include <algorithm>
-#include <vector>
-#include <deque>
+#include <queue>
 using namespace std;
-int result = 0;
-int st, en, cur, tmp;
-int v[100001] = {};
-int d[100001] = {};
-deque <int> q;
+using ll = long long;
+
+const ll MAX = 101010;
+ll n, m, d[MAX], cnt[MAX];
+queue <ll> q;
+
+void bfs(ll st){
+    q.push(st); 
+    d[st] = 0; cnt[st] = 1;
+    while(!q.empty()){
+        ll cur = q.front(); q.pop();
+        for(auto& nxt : {cur + 1, cur - 1, 2 * cur}){
+            if(nxt < 0 || nxt >= MAX) continue;
+            if(d[nxt] == -1){
+                q.push(nxt); 
+                d[nxt] = d[cur] + 1;
+            }
+
+            if(d[nxt] == d[cur] + 1) cnt[nxt] += cnt[cur];
+        }
+    }
+}
 
 int main(){
-	ios_base::sync_with_stdio(false);
-	cin.tie(0);
-	cout.tie(0);
+    ios::sync_with_stdio(0); // fastio
+    cin.tie(0), cout.tie(0); // fastio
 
-	cin >> st >> en;
-	q.push_back(st);
-	d[st] = 0;
-	v[st] = 1;
-	if (st == en) {
-		cout << 0 << "\n";
-		cout << 1;
-		return 0;
-	}
+    cin >> n >> m;
+    for(int i = 0;i < MAX;i++) d[i] = -1;
+    bfs(n);
 
-	while (!q.empty()) {
-		tmp = q.front();
-		q.pop_front();
-		for (int cur : {tmp - 1, tmp + 1, 2 * tmp}) {
-			if (cur < 0 || cur > 100000) {
-				continue; 
-			}
-			if (v[cur] == 1 && d[cur] != d[tmp] + 1) {
-				continue;
-			}
-			v[cur] = 1;
-			d[cur] = d[tmp] + 1;
-			if (cur == en) {
-				result++;
-			}
-			else {
-				q.push_back(cur);
-			}
-		}
-	}
+    cout << d[m] << "\n" << cnt[m];
 
-
-	cout << d[en] << "\n";
-	cout << result;
-
-	return 0;
+    return 0;
 }
