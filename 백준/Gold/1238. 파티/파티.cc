@@ -1,45 +1,54 @@
 #include <iostream>
-#include <queue>
-#include <algorithm>
 #include <vector>
+#include <queue> 
 using namespace std;
-priority_queue <pair <int, int>, vector <pair<int, int>>, greater<pair<int, int>>> pq;
-vector <pair <int,int>> arr[1001];
-int n, m, x, cost, a, b;
-int cur_loc, cur_cost;
-int d[1001][1001];
+using ll = long long;
 
-int main() {
+const ll MAX = 1010;
+const ll INF = 1e12;
+ll n, m, x, d[MAX][2];
+vector <pair<ll, ll>> adj[MAX][2];
+
+using pll = pair<ll, ll>;
+priority_queue <pll, vector<pll>, greater<pll>> pq;
+
+int main(){
+    ios::sync_with_stdio(0); // fastio
+    cin.tie(0), cout.tie(0); // fastio
+
     cin >> n >> m >> x;
-    while (m--) {
-        cin >> a >> b >> cost;
-        arr[a].push_back({ b, cost });
-        d[a][b] = cost;
+    while(m--){
+        ll s, e, c; cin >> s >> e >> c;
+        adj[s][0].push_back({e, c});
+        adj[e][1].push_back({s, c});
     }
-    fill(&d[0][0], &d[1000][1001], 100000000);
-    
-    for (int i = 1; i < n + 1; i++) {
-        pq.push({ 0 , i});
-        d[i][i] = 0;
-        while (!pq.empty()) {
-            pair <int, int> cur = pq.top();
-            pq.pop();
-            cur_loc = cur.second;
-            cur_cost = cur.first;
-            for (int j = 0; j < arr[cur_loc].size(); j++) {
-                if (d[i][arr[cur_loc][j].first] > d[i][cur_loc] + arr[cur_loc][j].second) {
-                    d[i][arr[cur_loc][j].first] = d[i][cur_loc] + arr[cur_loc][j].second;
-                    pq.push({ d[i][arr[cur_loc][j].first],arr[cur_loc][j].first });
-                }
+
+    for(int i = 0;i < MAX;i++){
+        for(int j = 0;j < 2;j++) d[i][j] = INF;
+    }
+
+    for(int i = 0;i <= 1;i++){
+        while(!pq.empty()) pq.pop();
+        pq.push({0, x});
+
+        while(!pq.empty()){
+            auto[cd, cur] = pq.top(); pq.pop();
+            if(d[cur][i] <= cd) continue;
+            d[cur][i] = cd;
+
+            for(auto& [nxt, co] : adj[cur][i]){
+                if(d[nxt][i] <= cd + co) continue;
+                pq.push({cd + co, nxt});
             }
         }
     }
 
-    int result = 0;
-    for (int i = 1; i < n + 1; i++) {
-        result = max(result, d[i][x] + d[x][i]);
+    ll result = 0;
+    for(int i = 1;i <= n;i++){
+        result = max(result, d[i][0] + d[i][1]);
     }
     cout << result;
 
     return 0;
 }
+
