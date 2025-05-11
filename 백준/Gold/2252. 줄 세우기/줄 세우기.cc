@@ -1,39 +1,38 @@
 #include <iostream>
 #include <vector>
-#include <deque>
+#include <queue>
 using namespace std;
-int n, m, a, b;
-int indegree[32001] = {};
-int cur;
-deque <int> q;
-vector <int> arr[32001];
-vector <int> result;
+using ll = long long;
 
-int main() {
+const ll MAX = 50101;
+const ll INF = 1e12;
+ll n, m, ind[MAX];
+vector <ll> adj[MAX];
+queue <ll> q;
+
+int main(){
+    ios::sync_with_stdio(0); // fastio
+    cin.tie(0), cout.tie(0); // fastio
+
     cin >> n >> m;
-    while (m--) {
-        cin >> a >> b;
-        arr[a].push_back(b);
-        indegree[b] += 1;
+    while(m--){
+        ll s, e; cin >> s >> e;
+        adj[s].push_back(e);
+        ind[e]++;
     }
-    for (int i = 1; i < n + 1; i++) {
-        if (indegree[i] == 0) {
-            q.push_back(i);
+
+    for(int i = 1;i <= n;i++){
+        if(!ind[i]) q.push(i);
+    }
+
+    while(!q.empty()){
+        auto cur = q.front(); q.pop();
+        cout << cur << " ";
+        for(auto& nxt : adj[cur]){
+            if(!--ind[nxt]) q.push(nxt);
         }
     }
-    while (!q.empty()) {
-        cur = q.front();
-        q.pop_front();
-        result.push_back(cur);
-        for (auto i : arr[cur]) {
-            indegree[i]--;
-            if (indegree[i] == 0) {
-                q.push_back(i);
-            }
-        }
-    }
-    for (auto i : result) {
-        cout << i << " ";
-    }
+
     return 0;
 }
+
