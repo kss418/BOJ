@@ -1,67 +1,55 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
-#include <deque>
+#include <queue>
 using namespace std;
-int bi, n, ret;
-deque <int> q;
-int ind[100001] = {}, ti[100001] = {}, dp[100001] = {};
-vector <int> arr[100001];
+using ll = long long;
 
-int main() {
-	cin.tie(0);
-	cout.tie(0);
-	ios::sync_with_stdio(false);
+const ll MAX = 1010;
+const ll INF = 1e12;
+ll n, m, k, ind[MAX];
+ll a[MAX], dp[MAX];
+vector <ll> adj[MAX];
+queue <ll> q;
 
-	int t;
-	cin >> t;
-	while (t--) {
-		cin >> bi >> n;
-		q.clear();
-		fill(ind,ind + 100000,0);
-		fill(ti, ti + 100000, 0);
-		fill(dp, dp + 100000, 0);
+void run(){
+    cin >> n >> m;
+    for(int i = 1;i <= n;i++){
+        cin >> a[i];
+        dp[i] = ind[i] = 0;
+        adj[i].clear();
+    }
 
-		for (int i = 0; i < 100001; i++) {
-			arr[i].clear();
-		}
-		
-		for (int i = 1; i < bi + 1; i++) {
-			cin >> ti[i];
-			dp[i] = ti[i];
-		}
+    while(m--){
+        ll s, e; cin >> s >> e;
+        adj[s].push_back(e);
+        ind[e]++;
+    }
+    cin >> k;
 
-		
-		for (int i = 0; i < n; i++) {
-			int a, b;
-			cin >> a >> b;
-			arr[a].push_back(b);
-			ind[b]++;
-		}
+    for(int i = 1;i <= n;i++){
+        if(!ind[i]) q.push(i);
+    }
+    
+    while(!q.empty()){
+        ll cur = q.front(); q.pop();
+        dp[cur] += a[cur];
+        for(auto& nxt : adj[cur]){
+            dp[nxt] = max(dp[nxt], dp[cur]);
+            if(!--ind[nxt]) q.push(nxt);
+        }
+    }
 
-		cin >> ret;
-
-		for (int i = 1; i < bi + 1; i++) {
-			if (!ind[i]) {
-				q.push_back(i);
-			}
-		}
-
-		while (!q.empty()) {
-			int cur = q.front();
-			q.pop_front();
-			for (auto i : arr[cur]) {
-				ind[i]--;
-				dp[i] = max(dp[i], ti[i] + dp[cur]);
-				if (!ind[i]) {
-					q.push_back(i);
-				}
-			}
-		}
-
-		cout << dp[ret] << "\n";
-	}
-
-
-	return 0;
+    ll result = 0;
+    cout << dp[k] << "\n";
 }
+
+int main(){
+    ios::sync_with_stdio(0); // fastio
+    cin.tie(0), cout.tie(0); // fastio
+
+    ll t; cin >> t;
+    while(t--) run();
+
+    return 0;
+}
+
