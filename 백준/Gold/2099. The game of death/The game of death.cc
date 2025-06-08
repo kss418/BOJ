@@ -29,7 +29,7 @@ public:
         arr[n][m] += num % mod; 
         arr[n][m] %= mod;
     }
-    void update(ll n, ll m, ll num){ arr[n][m] = num % mod; }
+    void update(ll n, ll m, ll num){ arr[n][m] = num; }
 
     _matrix operator *(_matrix& ot){
         _matrix ret(n, ot.m, mod);
@@ -37,7 +37,8 @@ public:
             for(int k = 0;k < m;k++){
                 ll now = arr[i][k];
                 for(int j = 0;j < ot.m;j++){
-                    ret.arr[i][j] = (ret.arr[i][j] + now * ot.arr[k][j]) % mod;
+                    ret.arr[i][j] = (ret.arr[i][j] + now * ot.arr[k][j]);
+                    if(ret.arr[i][j]) ret.arr[i][j] = 1;
                 }
             }
         }
