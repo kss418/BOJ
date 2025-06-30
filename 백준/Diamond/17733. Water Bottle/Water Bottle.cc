@@ -24,28 +24,31 @@ vector <ll> arr;
 class _lca {
 public:
     ll n; vector <ll> d;
-    vector <vector<ll>> p, adj;
+    vector <vector<ll>> p, mx;
+    vector <vector<pll>> adj;
     _lca(){}
     _lca(ll n) { //n 개수
         this->n = n;
         p.resize(n + 1, vector<ll>(log2(n + 1) + 1, -1));
+        mx.resize(n + 1, vector<ll>(log2(n + 1) + 1, 0));
         d.resize(n + 1); adj.resize(n + 1);
         fill(d.begin(), d.end(), -1);
     }
 
-    void add(ll a, ll b) { // 양방향
-        adj[a].push_back(b);
-        adj[b].push_back(a);
+    void add(ll a, ll b, ll c) { // 양방향
+        adj[a].push_back({b, c});
+        adj[b].push_back({a, c});
     }
 
     void addsol(ll a, ll b) { // 단방향
-        adj[a].push_back(b);
+        //adj[a].push_back(b);
     }
 
     void mktree(ll cur) {
-        for (auto& nxt : adj[cur]) {
+        for (auto& [nxt, co] : adj[cur]) {
             if (d[nxt] != -1) continue;
             p[nxt][0] = cur;
+            mx[nxt][0] = co; 
             d[nxt] = d[cur] + 1;
             mktree(nxt);
         }
@@ -61,28 +64,38 @@ public:
             for (int j = 0;j < n;j++) {
                 if (p[j][i - 1] == -1) continue;
                 p[j][i] = p[p[j][i - 1]][i - 1];
+                mx[j][i] = max(mx[j][i], mx[p[j][i - 1]][i - 1]);
+                mx[j][i] = max(mx[j][i], mx[j][i - 1]);
             }
         }
     }
 
-    ll ret(ll a, ll b) {
+    pll ret(ll a, ll b) {
         if (d[a] < d[b]) swap(a, b);
+        ll md = 0;
 
         ll diff = d[a] - d[b];
-        for (int i = log2(diff); i >= 0; i--) {
-            if (diff & (1ll << i)) a = p[a][i];
+        if(diff) for (int i = log2(diff); i >= 0; i--) {
+            if (diff & (1ll << i)){
+                md = max(md, mx[a][i]);
+                a = p[a][i];
+            }
         }
-        if (a == b) return a;
+        if (a == b) return {a, md};
 
         for (int i = log2(n); i >= 0; i--) {
             if (a == b) break;
             if (p[a][i] == -1) continue;
             if (p[a][i] == p[b][i]) continue;
 
+            md = max(md, mx[a][i]);
+            md = max(md, mx[b][i]);
             a = p[a][i]; b = p[b][i];
         }
 
-        return p[a][0];
+        md = max(md, mx[a][0]);
+        md = max(md, mx[b][0]);
+        return {p[a][0], md};
     }
 }; _lca lca;
 
@@ -216,9 +229,7 @@ void run(){
         auto& [line, c] = i;
         auto& [s, e] = line;
 
-        lca.add(s, e);
-        adj[s].push_back({e, c});
-        adj[e].push_back({s, c});
+        lca.add(s, e, c);
         mx[s] = max(mx[s], c);
         mx[e] = max(mx[e], c);
     }
@@ -233,19 +244,9 @@ void run(){
         s--; e--;
 
         ll now = -1;
-        ll l = lca.ret(s, e);
+        pll l = lca.ret(s, e);
 
-        if(l != -1){
-            for(auto& [nxt, co] : adj[l]){
-                if(lca.d[nxt] < lca.d[l]) continue;
-                ll a = lca.ret(nxt, s);
-                ll b = lca.ret(nxt, e);
-                if(a == nxt || b == nxt){
-                    now = max(now, co); 
-                }
-            }
-        }
-
+        if(l.x != -1) now = l.y;
         cout << now << "\n";
     }
 }
