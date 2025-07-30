@@ -12,14 +12,20 @@ ll n, m, k, t = 1; string s;
 
 constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
-constexpr ll MAX = 52; // SET MAX SIZE
+constexpr ll MAX = 55; // SET MAX SIZE
 constexpr ll MOD = 1234567;
 ll dp[MAX][MAX][2], c[MAX][MAX][2];
 
 ll num(ll cur, ll cnt, ll f){
     ll& ret = c[cur][cnt][f];
     if(ret != -1) return ret; ret = 0;
-    if(cur == 1) return ret = (cnt <= 1 ? 1 : 0);
+    if(cur == 1){
+        if(f){
+            if(n & (1ll << (cur - 1))) return ret = (cnt <= 1 ? 1 : 0);
+            return ret = (cnt ? 0 : 1);
+        }
+        return ret = (cnt <= 1 ? 1 : 0);
+    }
 
     if(f){
         if(n & (1ll << (cur - 1))){
@@ -39,7 +45,14 @@ ll num(ll cur, ll cnt, ll f){
 ll solve(ll cur, ll cnt, ll f){
     ll& ret = dp[cur][cnt][f];
     if(ret != -1) return ret; ret = 0;
-    if(cur == 1) return ret = (cnt == 1 ? 1 : 0);
+    if(cur == 1){
+        if(f){
+            if(n & (1ll << (cur - 1))) return ret = (cnt == 1 ? 1 : 0);
+            return ret = 0;
+        }
+
+        return ret = (cnt == 1 ? 1 : 0);
+    }
 
     if(f){
         if(n & (1ll << (cur - 1))){
@@ -63,11 +76,11 @@ ll solve(ll cur, ll cnt, ll f){
 }
 
 void run(){
-    cin >> n >> m; 
+    cin >> n >> m; n--;
     memset(dp, -1, sizeof(dp));
     memset(c, -1, sizeof(c));
 
-    cout << solve(51, m, 1);
+    cout << solve(54, m, 1);
 }
 
 int main() {
