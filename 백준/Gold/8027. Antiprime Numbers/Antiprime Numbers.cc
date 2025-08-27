@@ -20,7 +20,7 @@ public:
     vector <ll> arr;
 };
 deque <node> q;
-ll nxt[MAX], mn[MAX];
+ll mn[10101];
 
 class _es { // flag (1 == prime / 2 == phi / 4 == mobius)
 public:
@@ -76,12 +76,11 @@ public:
 };
 
 void run(){
-    cin >> n; _es es(101010); nxt[1] = 2;
+    cin >> n; _es es(101010); 
     memset(mn, 0x3f, sizeof(mn));
 
     for(int i = 0;i < es.ret().size() - 1;i++){
         ll a = es.ret()[i], b = es.ret()[i + 1];
-        nxt[a] = b;
     }
 
     q.push_back({1, 1, 1, {}});
