@@ -39,7 +39,8 @@ public:
 };
 
 void run(){
-    cin >> n; _gcd gcd;
+    cin >> n; _gcd gcd; 
+    tr.clear(); tmp.clear(); num = 1;
     for(int i = 1;i <= n;i++) cin >> a[i];
     cin >> m;
 
@@ -49,8 +50,8 @@ void run(){
     if(m % g){ cout << "No solutions" << "\n"; return; }
     ll div = m / g;
 
+    for(int i = 1;i <= n;i++) pre[i] = 1, result[i] = 0;
     g = a[1]; result[1] = 1;
-    for(int i = 1;i <= n;i++) pre[i] = 1;
 
     for(int i = 2;i <= n;i++){
         ll tmp = g;
@@ -68,7 +69,7 @@ void run(){
         if(pre[i] < 0) f ^= 1;
         if(nxt > 1000000000){
             tmp.push_back(num);
-            num = pre[i];
+            num = abs(pre[i]);
         }
         else num = nxt;
 
