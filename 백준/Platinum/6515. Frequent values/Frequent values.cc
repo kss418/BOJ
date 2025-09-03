@@ -19,7 +19,7 @@ ll cur, cnt[MAX], pre[MAX];
 
 class _mos{
 public:
-    ll sq; vector <ll> result, arr;
+    ll sq, n, m; vector <ll> result, arr;
     class query{
     public:
         ll l, r, n, sq;
@@ -30,7 +30,8 @@ public:
     };
     vector <query> q;
 
-    _mos(ll n, ll m){ // 배열 크기, 쿼리 크기
+    _mos(){}
+    _mos(ll n, ll m) : n(n), m(m){ // 배열 크기, 쿼리 크기
         sq = sqrt(n); arr.resize(n + 1);
         result.resize(m + 1);
     }
@@ -39,7 +40,7 @@ public:
         q.push_back({l, r, n, sq});
     }
 
-    void con(ll idx, ll val){ // 배열 삽입
+    void set(ll idx, ll val){ // 배열 삽입
         arr[idx] = val;
     }
 
@@ -62,17 +63,20 @@ public:
     }
 
     void init(){
-        sort(q.begin(), q.end());
+        if(q.empty()) return;
+        sort(all(q));
 
-        ll s = q[0].l, e = q[0].r;
-        for(int i = s;i <= e;i++) push(i);
+        ll s = q[0].l, e = s - 1;
+        while (e < q[0].r) push(++e);
+        while (s > q[0].l) push(--s);
+        while (s < q[0].l) pop(s++);
         result[q[0].n] = cur;
 
         for(int i = 1;i < m;i++){
-            while(q[i].l > s) pop(s++);
-            while(q[i].r < e) pop(e--);
             while(q[i].l < s) push(--s);
             while(q[i].r > e) push(++e);
+            while(q[i].l > s) pop(s++);
+            while(q[i].r < e) pop(e--);
             result[q[i].n] = cur;
         }
     }
@@ -93,7 +97,7 @@ int main() {
         memset(pre, 0, sizeof(pre));
         
         for(int i = 1;i <= n;i++) cin >> arr[i];
-        for(int i = 1;i <= n;i++) mos.con(i, arr[i]);
+        for(int i = 1;i <= n;i++) mos.set(i, arr[i]);
 
         for(int i = 1;i <= m;i++){
             ll l, r; cin >> l >> r;
