@@ -1,24 +1,27 @@
 import sys
-input = sys.stdin.readline
 
-n, m = list(map(int, input().rstrip().split()))
-a = [int(input().rstrip()) for _ in range(n)]
 
-def decision(cur):
-    cnt = 0
-    for i in a:
-        cnt += i // cur
-    return cnt >= m
+input = sys.stdin.read
+lines = input().strip().splitlines()
 
-def maximazation():
-    lo = 1
-    hi = 2 ** 31 - 1
-    while lo < hi:
-        mid = (lo + hi + 1) // 2
-        if(decision(mid)):
-            lo = mid
-        else:
-            hi = mid - 1
-    return lo
+K, N = map(int, lines[0].split())
 
-print(maximazation())
+numbers = [int(lines[i+1]) for i in range(K)]
+
+
+front = 1
+rear = 2**31 - 1
+while True:
+    if front >= rear:
+        print(front)
+        break
+    mid = (front+rear+1) // 2
+    result = 0
+    for i in numbers:
+        num = i // mid
+        result+=num
+    
+    if result >= N:
+        front = mid
+    else:
+        rear = mid-1
