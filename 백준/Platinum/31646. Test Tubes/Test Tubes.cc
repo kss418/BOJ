@@ -13,11 +13,12 @@ constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 201010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
-string a, b, c, oa, ob;
+deque <char> a, b, c;
+string oa, ob;
 vector <pll> result;
 
-void comp(string& os, string& s){
-    string tmp; char la = -1;
+void comp(string& os, deque <char>& s){
+    deque <char> tmp; char la = -1;
     for(auto& i : os){
         if(la != i) tmp.push_back(i);
         la = i;
@@ -26,73 +27,68 @@ void comp(string& os, string& s){
     s = tmp;
 }
 
-void op(){
-    result.clear(); comp(oa, a); comp(ob, b);
-    while(a.size() != 1 || b.size() != 1 || !c.empty()){
-        if(a.size() == 1 && b.size() == 1){
-            if(a.back() == b.back()){
-                result.push_back({2, 1});
-                result.push_back({3, 2});
-                b.pop_back(); b.push_back(c.back());
-            }
-            else if(a.back() == c.back()) result.push_back({3, 1});
-            else result.push_back({3, 2});
-            c.pop_back();
-        }
-        else if(a.size() == 1){
-            if(!b.empty() && a.back() == b.back()){
-                b.pop_back();
-                result.push_back({2, 1});
-            }
-            else if(!c.empty() && a.back() == c.back()){
-                c.pop_back();
-                result.push_back({3, 1});
-            }
-            else{
-                if(c.empty()) c.push_back(b.back());
-                b.pop_back();
-                result.push_back({2, 3});
-            }
-        }
-        else if(b.size() == 1){
-            if(!a.empty() && b.back() == a.back()){
-                a.pop_back();
-                result.push_back({1, 2});
-            }
-            else if(!c.empty() && b.back() == c.back()){
-                c.pop_back();
-                result.push_back({3, 2});
-            }
-            else{
-                if(c.empty()) c.push_back(a.back());
-                a.pop_back();
-                result.push_back({1, 3});
-            }
+void opa(){
+    while(a.size() > 1){
+        if(a.back() == b.back()){
+            a.pop_back();
+            result.push_back({1, 2});
         }
         else{
-            if(!a.empty() && !b.empty() && a.back() == b.back()){
-                if(a.size() < b.size()){
-                    a.pop_back();
-                    result.push_back({1, 2});
-                }
-                else{
-                    b.pop_back();
-                    result.push_back({2, 1});
-                }
-            }
-            else if(!a.empty() && !b.empty() && a.back() != b.back()){
-                if(a.size() < b.size()){
-                    result.push_back({1, 3});
-                    if(c.empty()) c.push_back(a.back());
-                    a.pop_back();
-                }
-                else{
-                    result.push_back({2, 3});
-                    if(c.empty()) c.push_back(b.back());
-                    b.pop_back();
-                }
-            }
+            if(c.empty()) c.push_back(a.back());
+            a.pop_back();
+            result.push_back({1, 3});
         }
+    }
+}
+
+void opb(){
+    while(b.size() > 1){
+        if(a.back() == b.back()){
+            b.pop_back();
+            result.push_back({2, 1});
+        }
+        else{
+            if(c.empty()) c.push_back(b.back());
+            b.pop_back();
+            result.push_back({2, 3});
+        }
+    }
+}
+
+void op(){
+    result.clear(); comp(oa, a); comp(ob, b); 
+    if(a[0] == b[0]) b.push_front(a[0] ^ 3);
+
+    if(a.back() == b.back()){
+        if(a.size() > 1){
+            a.pop_back();
+            result.push_back({1, 2});
+        }
+        else if(b.size() > 1){
+            b.pop_back();
+            result.push_back({2, 1});
+        }
+    }
+
+    if(a.size() > 1){
+        if(c.empty()) c.push_back(a.back());
+        a.pop_back();
+        result.push_back({1, 3});
+    }
+    else if(b.size() > 1){
+        if(c.empty()) c.push_back(b.back());
+        b.pop_back();
+        result.push_back({2, 3});
+    }
+
+    if(c.empty()) return;
+    if(a[0] != c.back()) opa(), opb();
+    else opb(), opa();
+
+    if(!c.empty()){
+        if(a.back() == c.back()) result.push_back({3, 1});
+        else result.push_back({3, 2});
+        c.pop_back();
     }
 }
 
