@@ -1,93 +1,67 @@
-#include <bits/stdc++.h>
-#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
-using namespace std; typedef long long ll;
-using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
-ll n, m, k, t; string s;
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
 
-constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
-constexpr ll MAX = 1010101;
-constexpr ll MOD = 1e9 + 7;
+int n, m;
+vector <vector <int>> adj, rev, result;
+vector <int> pre, nxt, org, num, tmp;
+int cnt, dfsn;
 
-class _scc { // 1-based index
-public:
-    ll n, dcnt = 0, scnt = 0;
-    vector <ll> d, sn;
-    vector<vector<ll>> adj, scc;
-    vector <bool> fin;
-    stack <ll> st;
+void cal(int cur){
+    pre[cur] = ++dfsn;
 
-    _scc(ll n) {
-        this->n = n;
-        d.resize(n + 1); fin.resize(n + 1);
-        adj.resize(n + 1); sn.resize(n + 1);
+    for(auto& nxt : rev[cur]){
+        if(!pre[nxt]) cal(nxt);
     }
 
-    void add(ll st, ll en) {
-        adj[st].push_back(en);
+    nxt[cur] = ++dfsn;
+    org[dfsn] = cur;
+}
+
+void dfs(int cur){
+    num[cur] = cnt;
+    tmp.push_back(cur);
+    for(auto& nxt : adj[cur]){
+        if(!num[nxt]) dfs(nxt);
+    }
+}
+
+int main(){
+    cin >> n >> m; 
+    num.resize(n + 1); org.resize(2 * n + 1);
+    adj.resize(n + 1); rev.resize(n + 1);
+    pre.resize(n + 1); nxt.resize(n + 1);
+
+    while(m--){
+        int s, e; cin >> s >> e;
+        adj[s].push_back(e);
+        rev[e].push_back(s);
     }
 
+    for(auto& i : adj) sort(i.begin(), i.end());
+    for(auto& i : rev) sort(i.begin(), i.end());
 
-    ll dfs(ll cur) {
-        d[cur] = ++dcnt;
-        st.push(cur);
-
-        ll mn = d[cur];
-        for (auto& nxt : adj[cur]) {
-            if (!d[nxt]) mn = min(mn, dfs(nxt));
-            else if (!fin[nxt]) mn = min(mn, d[nxt]);
-        }
-
-        if (mn == d[cur]) {
-            vector <ll> curscc;
-            while (1) {
-                ll t = st.top(); st.pop();
-                curscc.push_back(t);
-                fin[t] = 1; sn[t] = scnt;
-                if (t == cur) break;
-            }
-
-            sort(curscc.begin(), curscc.end());
-            scc.push_back(curscc); scnt++;
-        }
-
-        return mn;
+    for(int i = 1;i <= n;i++){
+        if(!pre[i]) cal(i);
     }
 
-    void init() {
-        for (int i = 1; i <= n; i++) {
-            if (d[i]) continue;
-            dfs(i);
-        }
+    for(int i = 2 * n;i >= 1;i--){
+        if(!org[i] || num[org[i]]) continue;
+        ++cnt; dfs(org[i]);
+
+        sort(tmp.begin(), tmp.end());
+        result.push_back(tmp);
+        tmp.clear();
     }
 
-    vector <vector <ll>> ret() { // scc 반환
-        sort(scc.begin(), scc.end());
-        return scc;
-    }
-
-    ll num(ll a) { // scc 번호 반환
-        return sn[a];
-    }
-};
-
-int main() {
-    fastio;
-    cin >> n >> m;
-    _scc scc(n);
-    while (m--) {
-        ll s, e;
-        cin >> s >> e;
-        scc.add(s, e);
-    }
+    sort(result.begin(), result.end());
     
-    scc.init();
-    vector <vector<ll>> ret = scc.ret();
-
-    cout << ret.size() << "\n";
-    for (auto& i : ret) {
-        for (auto& j : i) cout << j << " ";
-        cout << -1 << "\n";
+    cout << result.size() << "\n";
+    for(auto& i : result){
+        for(auto& j : i) cout << j << " ";
+        cout << "-1\n";
     }
-
+   
     return 0;
 }
