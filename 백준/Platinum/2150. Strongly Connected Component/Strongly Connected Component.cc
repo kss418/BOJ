@@ -35,8 +35,8 @@ int main(){
 
     while(m--){
         int s, e; cin >> s >> e;
-        adj[s].push_back(e);
-        rev[e].push_back(s);
+        adj[e].push_back(s);
+        rev[s].push_back(e);
     }
 
     for(auto& i : adj) sort(i.begin(), i.end());
