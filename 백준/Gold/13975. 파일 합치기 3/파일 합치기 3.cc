@@ -1,44 +1,28 @@
-#include <bits/stdc++.h>
-#include <ext/rope>
-#include <ext/pb_ds/assoc_container.hpp>
-#include <ext/pb_ds/tree_policy.hpp>
-using namespace __gnu_pbds;
-using namespace __gnu_cxx;
-#define ordered_set tree<int, null_type, less<int>, rb_tree_tag,tree_order_statistics_node_update>
-#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
-#define all(x) (x).begin(), (x).end()
-#define x first 
-#define y second
-using namespace std; typedef long long ll;
-using ld = long double; using pld = pair<ld, ld>;
-using ull = unsigned long long; 
-using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
-ll n, m, k, t = 1; string s;
+#include <iostream>
+#include <queue>
+using namespace std;
+using ll = long long;
 
-constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
-constexpr ll MAX = 1010101; // SET MAX SIZE
-constexpr ll MOD = 998244353;
-ll a[MAX];
+const ll MAX = 1010101;
+ll n, t, a[MAX];
 priority_queue <ll, vector<ll>, greater<ll>> pq;
 
-void run(){
-    cin >> n; while(!pq.empty()) pq.pop();
+void solve(){
+    cin >> n; ll result = 0;
     for(int i = 1;i <= n;i++) cin >> a[i], pq.push(a[i]);
-
-    ll result = 0;
     while(pq.size() > 1){
-        ll a = pq.top(); pq.pop();
-        ll b = pq.top(); pq.pop();
-
-        result += a + b; pq.push(a + b);
+        ll fi = pq.top(); pq.pop();
+        ll se = pq.top(); pq.pop();
+        result += fi + se;
+        pq.push(fi + se);
     }
 
+    pq.pop();
     cout << result << "\n";
 }
 
-int main() {
-    fastio; cin >> t;
-    while(t--) run();
-    
+int main(){
+    cin >> t;
+    while(t--) solve();
     return 0;
 }
