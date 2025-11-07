@@ -1,90 +1,47 @@
-#include <bits/stdc++.h>
-#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
-using namespace std; typedef long long ll;
-using pll = pair<ll, ll>; ll n, m, k, t; string s;
+#include <iostream>
+#include <queue>
+using namespace std;
+using ll = long long;
+using pll = pair<ll, ll>;
 
-constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
-constexpr ll MAX = 301;
-constexpr ll MOD = 1e9 + 7;
+const ll MAX = 303;
+ll n, c, result;
+bool v[MAX];
+vector <pll> adj[MAX];
 
-template <typename T = ll> // 반환 타입
-class _mst {
+class node{
 public:
-    vector<vector<pair<T, ll>>> adj;
-    vector<ll> p, size; ll n; T result = 0;
-    class edge {
-    public:
-        ll s, e; T c;
-        bool operator>(const edge& ot) const {
-            return c > ot.c;
-        }
-    };
-    priority_queue<edge, vector<edge>, greater<edge>> pq;
-
-    _mst(ll n) {
-        this->n = n;
-        adj.resize(n + 1);
-        p.resize(n + 1); size.resize(n + 1);
-        fill(p.begin(), p.end(), -1);
-        fill(size.begin(), size.end(), 1);
-    }
-
-    ll find(ll num) {
-        if (p[num] == -1) return num;
-        return p[num] = find(p[num]);
-    }
-
-    void merge(ll a, ll b) {
-        a = find(a); b = find(b);
-        if (a == b) return;
-        if (a > b) swap(a, b);
-        p[b] = a, size[a] += size[b];
-    }
-
-    ll same(ll a, ll b) {
-        if (find(a) == find(b)) return 1;
-        return 0;
-    }
-
-    void add(ll st, ll en, T c = 1) { // 양방향
-        adj[st].push_back({ c, en });
-        adj[en].push_back({ c, st });
-        pq.push({ st, en, c });
-        pq.push({ en, st, c });
-    }
-
-    void init(ll num = 0) { // num 만큼 적게 간선 연결
-        ll cnt = 0;
-        while (!pq.empty()) {
-            auto [st, en, c] = pq.top(); pq.pop();
-            if (same(st, en)) continue; merge(st, en);
-            result += c; cnt++;
-            if (cnt == n - 1 - num) break;
-        }
-    }
-
-    T ret() {
-        return result;
+    ll s, e, c;
+    bool operator > (const node& ot) const{
+        return c > ot.c;
     }
 };
+priority_queue <node, vector<node>, greater<node>> pq;
 
-int main()
-{
-    fastio;
+int main(){
     cin >> n;
-    _mst mst(n + 1);
-    for (int i = 1; i <= n; i++) cin >> k, mst.add(0, i, k);
+    for(int i = 1;i <= n;i++) cin >> c, adj[0].push_back({i, c});
+    for(int i = 1;i <= n;i++){
+        for(int j = 1;j <= n;j++){
+            cin >> c; if(!c) continue;
+            adj[i].push_back({j, c});
+        }
+    }    
 
-
-    for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
-            cin >> k;
-            if (k) mst.add(i, j, k);
+    v[0] = 1;
+    for(auto& [e, c] : adj[0]) pq.push({0, e, c});
+    
+    while(!pq.empty()){
+        auto[s, e, c] = pq.top(); pq.pop();
+        if(v[e] == 1) continue;
+        result += c; v[e] = 1;
+    
+        for(auto& [nxt, co] : adj[e]){
+            if(v[nxt]) continue;
+            pq.push({e, nxt, co});
         }
     }
-    mst.init();
-    cout << mst.ret();
 
-         
+    cout << result;
     return 0;
 }
