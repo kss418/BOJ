@@ -79,8 +79,9 @@ void run(){
         for(auto& [x, y] : comp){
             ll now = 1;
             while(now <= y){
-                num.push_back(x * now);
-                y -= now; now <<= 1ll;
+                ll mn = min(now, y);
+                num.push_back(x * mn);
+                y -= mn; now <<= 1ll;
             }
         }
     
