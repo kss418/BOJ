@@ -44,8 +44,8 @@ public:
 
     _seg(){}
     _seg(ll n) : n(n){ 
-        sz = 1; while(sz < n) sz <<= 1ll;
-        seg.assign(2 * sz, _seg::node());
+        sz = 1; while(sz < n + 1) sz <<= 1ll;
+        seg.assign(2 * sz, node());
     }
 
     node merge(node l, node r){
@@ -55,11 +55,11 @@ public:
     }
 
     node query(ll st, ll en) {
-        st = max(1ll, st); en = min(n, en);
-        if(st > en) return _seg::node();
+        st = max(0ll, st); en = min(n, en);
+        if(st > en) return node();
 
-        node l = _seg::node(), r = _seg::node();
-        st += sz - 1; en += sz - 1;
+        node l = node(), r = node();
+        st += sz; en += sz;
         while(st <= en){
             if(st & 1) l = merge(l, seg[st++]);
             if(!(en & 1)) r = merge(seg[en--], r);
@@ -70,8 +70,8 @@ public:
     }
 
     void set(ll idx, node val){
-        if(idx < 1 || idx > n) return;
-        ll p = idx + sz - 1;
+        if(idx < 0 || idx > n) return;
+        ll p = idx + sz;
         seg[p] = val;
         for(p >>= 1ll; p; p >>= 1){
             seg[p] = merge(seg[p << 1], seg[p << 1 | 1]);
@@ -79,9 +79,9 @@ public:
     }
 
     void add(ll idx, node val){
-        if(idx < 1 || idx > n) return;
-        ll p = idx + sz - 1;
-        seg[p].v += val;
+        if(idx < 0 || idx > n) return;
+        ll p = idx + sz;
+        seg[p] += val;
         for(p >>= 1; p; p >>= 1){
             seg[p] = merge(seg[p << 1], seg[p << 1 | 1]);
         }
