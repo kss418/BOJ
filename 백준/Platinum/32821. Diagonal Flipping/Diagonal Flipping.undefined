@@ -1,0 +1,123 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX][MAX], num[2];
+vector <ll> adj[4 * MAX];
+bool f[2];
+ll v[4 * MAX];
+
+class _uf { 
+public:
+    ll n; vector <ll> p, si, sum;
+    
+    _uf(){}
+    _uf(ll n) { 
+        this->n = n;
+        p.resize(n + 1, -1); si.resize(n + 1, 1);
+        sum.resize(n + 1, 0);
+    }
+
+    ll find(ll num) { 
+        if (p[num] == -1) return num;
+        return p[num] = find(p[num]);
+    }
+
+    void merge(ll a, ll b) {
+        a = find(a); b = find(b);
+        if (a == b) return;
+        if (size(a) < size(b)) swap(a, b);
+        p[b] = a, si[a] += si[b];
+        sum[a] += sum[b];
+    }
+
+    ll size(ll num){ return si[find(num)]; }
+    bool same(ll a, ll b) { return find(a) == find(b); }
+}; _uf uf;
+
+ll l(ll cy, ll cx){
+    return cy + cx;
+}
+
+ll r(ll cy, ll cx){
+    return cy - cx + m - 1 + n + m - 1;
+}
+
+bool dfs(ll cur, ll cnt = 0){
+    if(v[cur] != -1){
+        return v[cur] == cnt; 
+    }
+    
+    v[cur] = cnt;
+    if(uf.sum[cur]) num[cnt] += uf.size(cur);
+    for(auto& nxt : adj[cur]){
+        bool now = dfs(nxt, cnt ^ 1);
+        if(!now) return 0;
+    }
+
+    return 1;
+}
+
+void run(){
+    cin >> n >> m; uf = {2 * (n + m - 1)};
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            cin >> a[i][j];
+            if(!a[i][j]) continue;
+            uf.sum[uf.find(l(i, j))]++;
+            uf.sum[uf.find(r(i, j))]++;
+        }
+    }
+
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            if(!a[i][j]) uf.merge(l(i, j), r(i, j));
+        }
+    }
+
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            if(!a[i][j]) continue;
+            ll lf = uf.find(l(i, j)), rf = uf.find(r(i, j));
+            adj[lf].push_back(rf);
+            adj[rf].push_back(lf);
+        }
+    }
+
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            if(!a[i][j]) continue;
+            if(!uf.same(l(i, j), r(i, j))) continue;
+            cout << -1; return;
+        }
+    }
+    
+    ll result = 0; memset(v, -1, sizeof(v));
+    for(int i = 0;i < 2 * (n + m - 1);i++){
+        num[0] = num[1] = 0;
+        if(v[i] == -1 && uf.find(i) == i){
+            if(!dfs(i)){ cout << -1; return; }
+            result += min(num[0], num[1]);
+        }
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
