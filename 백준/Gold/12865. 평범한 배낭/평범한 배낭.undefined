@@ -1,0 +1,29 @@
+#include <iostream>
+#include <memory.h>
+using namespace std;
+constexpr int INF = 0x3f3f3f3f;
+constexpr int MINF = 0xc0c0c0c0;
+
+int dp[101][101010], p[101], w[101];
+
+int solve(int cur, int cnt){
+    int& ret = dp[cur][cnt];
+    if(ret != INF) return ret; ret = MINF;
+    if(!cur) return ret = (cnt ? MINF : 0);
+
+    ret = max(ret, solve(cur - 1, cnt));
+    if(cnt) ret = max(ret, solve(cur, cnt - 1));
+    if(cnt >= p[cur]) ret = max(ret, solve(cur - 1, cnt - p[cur]) + w[cur]);
+
+    return ret;
+}
+
+int main(){
+    int n, m; cin >> n >> m;
+    for(int i = 1;i <= n;i++) cin >> p[i] >> w[i];
+
+    memset(dp, 0x3f, sizeof(dp));
+    cout << solve(n, m);
+
+    return 0;
+}
