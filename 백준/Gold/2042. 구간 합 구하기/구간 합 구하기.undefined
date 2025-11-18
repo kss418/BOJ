@@ -1,0 +1,92 @@
+#include <bits/stdc++.h>
+#include <ext/rope>
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+using namespace __gnu_cxx;
+#define ordered_set tree<int, null_type, less<int>, rb_tree_tag,tree_order_statistics_node_update>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; typedef long long ll;
+using ld = long double; using pld = pair<ld, ld>;
+using ull = unsigned long long; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 3010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+pll a[MAX]; ll co[MAX];
+
+class _fw{
+public:
+    ll n; _fw(){}
+    _fw(ll n) : n(n){ bit.assign(n + 1, node()); }
+
+    class node{
+    public:
+        ll v;
+        node() : node(0){} // identity
+        node(ll v) : v(v){}
+        operator ll(){ // query type
+            return v;
+        }
+    }; vector <node> bit;
+
+    node merge(const node& l, const node& r){
+        return{
+            l.v + r.v
+        };
+    }
+
+    node inv(const node& a){
+        return{
+            -a.v
+        };
+    }
+
+    // range query -> need inv
+    node query(ll l, ll r){ 
+        if(l > r) return node();
+        return merge(inv(query(l - 1)), query(r)); 
+    }
+
+    // return 1 ~ idx
+    node query(ll idx){
+        node ret = node();
+        for(int i = idx;i > 0;i -= i & -i) ret = merge(ret, bit[i]);
+        return ret;
+    }
+
+    void add(ll idx, ll v){
+        for(int i = idx;i <= n;i += i & -i) bit[i] = merge(bit[i], v);
+    }
+};
+
+void run(){
+    cin >> n >> m >> k; _fw fw(n);
+    for(int i = 1;i <= n;i++) {
+        ll num; cin >> num;
+        fw.add(i, num);
+    } 
+
+    for(int i = 1;i <= m + k;i++){
+        ll op, idx, v; cin >> op >> idx >> v;
+        if(op == 1){
+            ll now = fw.query(idx, idx);
+            fw.add(idx, v - now);
+        }
+        else cout << fw.query(idx, v) << "\n";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
+
