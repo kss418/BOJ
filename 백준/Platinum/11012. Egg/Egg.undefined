@@ -1,0 +1,134 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll mx[MAX];
+
+class _pst{
+public:
+    ll n, q, lg, nc, vc;
+    vector <ll> lv, rv, root;
+    _pst(){}
+    _pst(ll n, ll q) : n(n), q(q){ // q -> update size
+        lg = __lg(n + 1) + 2; clear();
+    }
+
+    class node{
+    public:
+        ll v;
+        node() : node(0){} // identity
+        node(ll v) : v(v) {}
+        operator ll() const{ // query
+            return v;
+        }
+    }; vector <node> seg;
+
+    node merge(const node& l, const node& r){
+        return{
+            l.v + r.v
+        };
+    }
+
+    ll clone(ll idx){
+        ++nc;
+        seg[nc] = seg[idx];
+        lv[nc] = lv[idx]; rv[nc] = rv[idx];
+        return nc;
+    }
+
+    void update(ll idx, const node& val){ update(vc, idx, val); }
+    void update(ll ver, ll idx, const node& val){
+        ++vc;
+        root[vc] = update(root[ver], 0, n, idx, val);
+    }
+
+    ll update(ll idx, ll s, ll e, ll pos, const node& val){
+        ll cur = clone(idx);
+        if(s == e){
+            seg[cur].v += val.v;
+            return cur;
+        }
+
+        ll m = (s + e) >> 1ll;
+        if(pos <= m) lv[cur] = update(lv[cur], s, m, pos, val);
+        else rv[cur] = update(rv[cur], m + 1, e, pos, val);
+
+        seg[cur] = merge(seg[lv[cur]], seg[rv[cur]]);
+        return cur;
+    }
+
+    node query(ll ver, ll idx){ return query(ver, idx, idx); }
+    node query(ll ver, ll l, ll r){
+        l = max(0ll, l); r = min(n, r);
+        if(l > r) return node();
+        return query(root[ver], 0, n, l, r);
+    }
+
+    node query(ll idx, ll s, ll e, ll l, ll r){
+        if(!idx) return node();
+        if(r < s || e < l) return node();
+        if(l <= s && r >= e) return seg[idx];
+
+        ll m = (s + e) >> 1ll;
+        node ln = query(lv[idx], s, m, l, r);
+        node rn = query(rv[idx], m + 1, e, l, r);
+        return merge(ln, rn);
+    }
+
+    void clear(){
+        nc = vc = 0;
+        ll mx = (q + 1) * lg + 5;
+        lv.assign(mx, 0); rv.assign(mx, 0);
+        root.assign(q + 1, 0); seg.assign(mx, node());
+    }
+};
+
+void run(){
+    cin >> n >> m; _pst seg(MAX, n);
+    vector <pll> arr;
+    for(int i = 1;i <= n;i++){
+        ll x, y; cin >> x >> y;
+        arr.push_back({x + 1, y + 1});
+    }
+    sort(all(arr), [](pll& a, pll& b){
+        return a.y < b.y;
+    });
+    memset(mx, 0, sizeof(mx));
+
+    for(int i = 0;i < arr.size();i++){
+        auto& [x, y] = arr[i];
+        mx[y] = max<ll>(mx[y], i + 1);
+        seg.update(x, 1);
+    }
+
+    for(int i = 1;i < MAX - 1;i++) mx[i] = max(mx[i], mx[i - 1]);
+
+    ll result = 0;
+    while(m--){
+        ll x1, x2, y1, y2;
+        cin >> x1 >> x2 >> y1 >> y2;
+        x1++; x2++; y1++; y2++;
+        ll now = seg.query(mx[y2], x1, x2) - seg.query(mx[y1 - 1], x1, x2);
+        result += now;
+    }
+    
+    cout << result << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
