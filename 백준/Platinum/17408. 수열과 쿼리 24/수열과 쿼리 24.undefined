@@ -1,0 +1,101 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX];
+vector <ll> tmp;
+
+class _seg { // 구간 예외 처리하기
+public:
+    ll n, sz;
+    class node{
+    public:
+        ll a, b;
+        node() : node(MINF, MINF){} // identity
+        node(ll a, ll b) : a(a), b(b) {}
+
+        operator ll(){ // query
+            return a + b;
+        }
+    }; vector <node> seg;
+
+    _seg(){}
+    _seg(ll n) : n(n){ 
+        sz = 1; while(sz < n + 1) sz <<= 1ll;
+        seg.assign(2 * sz, node());
+    }
+
+    node merge(node l, node r){
+        tmp.clear();
+        tmp.push_back(l.a);
+        tmp.push_back(l.b);
+        tmp.push_back(r.a);
+        tmp.push_back(r.b);
+        sort(all(tmp));
+
+        return{
+            tmp[3], tmp[2]
+        };
+    }
+
+    node query(ll st, ll en) {
+        st = max(0ll, st); en = min(n, en);
+        if(st > en) return node();
+
+        node l = node(), r = node();
+        st += sz; en += sz;
+        while(st <= en){
+            if(st & 1) l = merge(l, seg[st++]);
+            if(!(en & 1)) r = merge(seg[en--], r);
+            st >>= 1; en >>= 1; 
+        }
+
+        return merge(l, r);
+    }
+
+    void set(ll idx, node val){
+        if(idx < 0 || idx > n) return;
+        ll p = idx + sz;
+        seg[p] = val;
+        for(p >>= 1ll; p; p >>= 1){
+            seg[p] = merge(seg[p << 1], seg[p << 1 | 1]);
+        }
+    }
+
+    void clear(){ fill(all(seg), node()); }
+};
+
+void run(){
+    cin >> n; _seg seg(n);
+    for(int i = 1;i <= n;i++) cin >> a[i], seg.set(i, {a[i], MINF});
+    cin >> m;
+    while(m--){
+        ll op; cin >> op;
+        if(op == 1){
+            ll idx, v; cin >> idx >> v;
+            seg.set(idx, {v, MINF});
+        }
+        else{
+            ll s, e; cin >> s >> e;
+            cout << seg.query(s, e) << "\n";
+        }
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
