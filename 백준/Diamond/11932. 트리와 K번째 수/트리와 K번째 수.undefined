@@ -1,0 +1,280 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX], num[MAX];
+vector <ll> tmp, adj[MAX];
+unordered_map <ll, ll> mp;
+
+class _lca { // 1-based index
+public:
+    ll n, m; vector <ll> d;
+    vector <vector<ll>> p;
+    vector <vector<pll>> adj;
+
+    class node{
+    public:
+        ll v;
+        node() : node(0) {}
+        node(ll v) : v(v) {}
+
+        operator ll(){ // query
+            return v;
+        }
+    };
+    vector <vector<node>> arr;
+
+    _lca() {}
+    _lca(ll n, bool m = 0) { //n 개수
+        this->n = n; this->m = m; 
+        p.resize(log2(n + 1) + 1, vector<ll>(n + 1, -1));
+        d.resize(n + 1); adj.resize(n + 1);
+        fill(d.begin(), d.end(), -1);
+
+        if(m) arr.resize(log2(n + 1) + 1, vector<node>(n + 1, node()));
+    }
+
+    void add(ll a, ll b, ll c = 1) { // 양방향
+        adj[a].push_back({b, c});
+        adj[b].push_back({a, c});
+    }
+
+    void addsol(ll a, ll b, ll c = 1) { // 단방향
+        adj[a].push_back({b, c});
+    }
+
+    node merge(const node& a, const node& b){
+        return {
+            max(a.v, b.v)
+        };
+    }
+
+    node merge(ll a, const node& b){
+        return{
+            max(a, b.v)
+        };
+    }
+
+    void mktree(ll cur) {
+        for (auto& [nxt, co] : adj[cur]) {
+            if (d[nxt] != -1) continue;
+            p[0][nxt] = cur;
+            d[nxt] = d[cur] + 1;
+
+            if(m) arr[0][nxt] = co;
+            mktree(nxt);
+        }
+    }
+
+    void init() {
+        for(int i = 1;i <= n;i++){
+            if(d[i] != -1) continue;
+            d[i] = 0; mktree(i);
+        }
+
+        for (int i = 1; i <= log2(n); i++) {
+            for (int j = 1; j <= n; j++) {
+                if (p[i - 1][j] == -1) continue;
+                p[i][j] = p[i - 1][p[i - 1][j]];
+                if(m) arr[i][j] = merge(arr[i - 1][p[i - 1][j]], arr[i - 1][j]);
+            }
+        }
+    }
+
+    ll shift(ll a, ll diff){
+        if(diff <= 0) return a;
+        for (int i = log2(diff); i >= 0; i--) {
+            if (diff & (1ll << i)) a = p[i][a];
+        }
+
+        return a;
+    }
+
+    ll ret(ll a, ll b) {
+        if (d[a] < d[b]) swap(a, b);
+
+        a = shift(a, d[a] - d[b]);
+        if (a == b) return a;
+
+        for (int i = log2(n); i >= 0; i--) {
+            if (a == b) break;
+            if (p[i][a] == -1) continue;
+            if (p[i][a] == p[i][b]) continue;
+
+            a = p[i][a]; b = p[i][b];
+        }
+
+        return p[0][a];
+    }
+};
+
+class _pst{
+public:
+    ll n, q, lg, nc, vc;
+    vector <ll> lv, rv, root;
+    _pst(){}
+    _pst(ll n, ll q) : n(n), q(q){ // q -> update size
+        lg = __lg(n + 1) + 2; clear();
+    }
+
+    class node{
+    public:
+        ll v;
+        node() : node(0){} // identity
+        node(ll v) : v(v) {}
+        operator ll() const{ // query
+            return v;
+        }
+    }; vector <node> seg;
+
+    node merge(const node& l, const node& r){
+        return{
+            l.v + r.v
+        };
+    }
+
+    ll clone(ll idx){
+        ++nc;
+        seg[nc] = seg[idx];
+        lv[nc] = lv[idx]; rv[nc] = rv[idx];
+        return nc;
+    }
+
+    ll update(ll idx, const node& val){ return update(vc, idx, val); }
+    ll update(ll ver, ll idx, const node& val){
+        ++vc;
+        root[vc] = update(root[ver], 0, n, idx, val);
+        return vc;
+    }
+
+    ll update(ll idx, ll s, ll e, ll pos, const node& val){
+        ll cur = clone(idx);
+        if(s == e){
+            seg[cur].v += val.v;
+            return cur;
+        }
+
+        ll m = (s + e) >> 1ll;
+        if(pos <= m) lv[cur] = update(lv[cur], s, m, pos, val);
+        else rv[cur] = update(rv[cur], m + 1, e, pos, val);
+
+        seg[cur] = merge(seg[lv[cur]], seg[rv[cur]]);
+        return cur;
+    }
+
+    node query(ll ver, ll idx){ return query(ver, idx, idx); }
+    node query(ll ver, ll l, ll r){
+        l = max(0ll, l); r = min(n, r);
+        if(l > r) return node();
+        return query(root[ver], 0, n, l, r);
+    }
+
+    node query(ll idx, ll s, ll e, ll l, ll r){
+        if(!idx) return node();
+        if(r < s || e < l) return node();
+        if(l <= s && r >= e) return seg[idx];
+
+        ll m = (s + e) >> 1ll;
+        node ln = query(lv[idx], s, m, l, r);
+        node rn = query(rv[idx], m + 1, e, l, r);
+        return merge(ln, rn);
+    }
+
+    void clear(){
+        nc = vc = 0;
+        ll mx = (q + 1) * lg + 5;
+        lv.assign(mx, 0); rv.assign(mx, 0);
+        root.assign(q + 1, 0); seg.assign(mx, node());
+    }
+
+    ll cal1(ll si, ll ei, ll l, ll r, ll k){
+        if(l == r) return l;
+        ll m = (l + r) >> 1ll;
+
+        ll sl = lv[si], sr = rv[si];
+        ll el = lv[ei], er = rv[ei];
+        ll cnt = seg[el].v - seg[sl].v;
+
+        if(k <= cnt) return cal1(sl, el, l, m, k);
+        return cal1(sr, er, m + 1, r, k - cnt);
+    }
+
+    ll cal2(ll s1, ll s2, ll e1, ll e2, ll l, ll r, ll k){
+        if(l == r) return l;
+        ll m = (l + r) >> 1ll;
+
+        ll sl1 = lv[s1], sr1 = rv[s1];
+        ll sl2 = lv[s2], sr2 = rv[s2];
+        ll el1 = lv[e1], er1 = rv[e1];
+        ll el2 = lv[e2], er2 = rv[e2];
+        ll cnt = seg[el1].v + seg[el2].v - seg[sl1].v - seg[sl2].v;
+
+        if(k <= cnt) return cal2(sl1, sl2, el1, el2, l, m, k);
+        return cal2(sr1, sr2, er1, er2, m + 1, r, k - cnt);
+    }
+
+    ll kth(ll s, ll e, ll k){
+        return cal1(root[num[s]], root[num[e]], 0, n, k);
+    } 
+
+    ll kth(ll s1, ll s2, ll e1, ll e2, ll k){
+        return cal2(root[num[s1]], root[num[s2]], root[num[e1]], root[num[e2]], 0, n, k);
+    } 
+}; _lca lca; _pst pst;
+
+void dfs(ll cur = 1, ll pre = 0){
+    num[cur] = pst.update(num[pre], a[cur], 1);
+    for(auto& [nxt, _] : lca.adj[cur]){
+        if(nxt == pre) continue;
+        dfs(nxt, cur);
+    }
+}
+
+void run(){
+    cin >> n >> m; lca = {n}; pst = {n, 2 * n};
+    for(int i = 1;i <= n;i++) cin >> a[i], tmp.push_back(a[i]);
+    sort(all(tmp)); tmp.erase(unique(all(tmp)), tmp.end());
+    for(int i = 0;i < tmp.size();i++) mp[tmp[i]] = i;
+    for(int i = 1;i <= n;i++) a[i] = mp[a[i]];
+
+    for(int i = 1;i < n;i++){
+        ll s, e; cin >> s >> e;
+        lca.add(s, e);
+    }
+    lca.init(); dfs();
+    
+    while(m--){
+        ll s, e, k; cin >> s >> e >> k;
+        ll l = lca.ret(s, e);
+        if(s == e) cout << tmp[a[s]] << "\n";
+        else if(l == s || l == e){
+            if(s == l) swap(s, e);
+            ll p = lca.p[0][l];
+            if(p == -1) p = 0;
+            cout << tmp[pst.kth(p, s, k)] << "\n";
+        }
+        else{
+            ll p = lca.p[0][l];
+            if(p == -1) p = 0;
+            cout << tmp[pst.kth(l, p, s, e, k)] << "\n";
+        }
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
