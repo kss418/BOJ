@@ -1,0 +1,54 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 3010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[404][MAX], dp[404][MAX][3];
+
+void run(){
+    cin >> n >> m;
+    for(int i = 1;i <= m;i++){
+        for(int j = 1;j <= n;j++) cin >> a[i][j];
+    }
+
+    memset(dp, 0x3f, sizeof(dp));
+    for(int i = 1;i <= n;i++) dp[1][i][0] = a[1][i];
+
+    for(int i = 2;i <= m;i++){
+        ll mn = INF;
+        for(int j = 1;j <= n;j++){
+            for(int k = 0;k < 3;k++) mn = min(mn, dp[i - 1][j][k]);
+        }
+
+        for(int j = 1;j <= n;j++){
+            dp[i][j][0] = min(dp[i][j][0], mn + a[i][j]);
+            dp[i][j][1] = min(dp[i][j][1], dp[i - 1][j][0] + (a[i][j] / 10) * 9);
+            dp[i][j][2] = min(dp[i][j][2], dp[i - 1][j][1] + (a[i][j] / 10) * 7);
+            dp[i][j][2] = min(dp[i][j][2], dp[i - 1][j][2] + (a[i][j] / 10) * 7);
+        }
+    }
+
+    ll result = INF;
+    for(int i = 1;i <= n;i++){
+        for(int j = 0;j < 3;j++) result = min(result, dp[m][i][j]);
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
