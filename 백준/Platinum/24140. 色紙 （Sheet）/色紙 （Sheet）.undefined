@@ -1,0 +1,82 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX][MAX], l[1010], r[1010];
+ll u[1010], d[1010], cnt[1010], use;
+bool v[MAX][MAX];
+vector <ll> adj[MAX][MAX], result, arr;
+deque <ll> q;
+
+void run(){
+    cin >> n >> m >> k;
+    memset(l, 0x3f, sizeof(l));
+    memset(u, 0x3f, sizeof(u));
+    for(ll i = 1;i <= k;i++){
+        for(ll j = 1;j <= m;j++){
+            cin >> a[i][j]; cnt[a[i][j]]--;
+            l[a[i][j]] = min(l[a[i][j]], j);
+            r[a[i][j]] = max(r[a[i][j]], j);
+            u[a[i][j]] = min(u[a[i][j]], i);
+            d[a[i][j]] = max(d[a[i][j]], i);
+        }
+    }
+
+    for(int i = 1;i <= n;i++){
+        cnt[i] += (d[i] - u[i] + 1) * (r[i] - l[i] + 1);
+        if(u[i] == INF){
+            cnt[i] = -1;
+            arr.push_back(i);
+            continue;
+        }
+
+        for(int cy = u[i];cy <= d[i];cy++){
+            for(int cx = l[i];cx <= r[i];cx++) adj[cy][cx].push_back(i);
+        }
+    }
+
+    for(int i = 1;i <= n;i++){
+        if(!cnt[i]) q.push_back(i);
+    }
+
+    while(!q.empty()){
+        ll cur = q.front(); q.pop_front();
+        result.push_back(cur);
+
+        for(int cy = u[cur];cy <= d[cur];cy++){
+            for(int cx = l[cur];cx <= r[cur];cx++){
+                if(v[cy][cx]) continue; v[cy][cx] = 1; use++;
+                for(auto& nxt : adj[cy][cx]){
+                    if(!--cnt[nxt]) q.push_back(nxt);
+                }
+            }
+        }
+
+        while(use > 0 && !arr.empty()){
+            use--;
+            result.push_back(arr.back());
+            arr.pop_back();
+        }
+    }
+
+    reverse(all(result));
+    for(auto& i : result) cout << i << " ";
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
