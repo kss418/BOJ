@@ -1,0 +1,137 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+pll a[MAX];
+unordered_map <ll, bool> mx, my;
+ll result;
+vector <ll> v;
+map <ll, ll> mp;
+
+class _seg { // 구간 예외 처리하기
+public:
+    ll n, sz;
+    class node{
+    public:
+        ll v;
+        node() : node(0){} // identity
+        node(ll v) : v(v) {}
+
+        operator ll(){ // query
+            return v;
+        }
+    }; vector <node> seg;
+
+    _seg(){}
+    _seg(ll n) : n(n){ 
+        sz = 1; while(sz < n + 1) sz <<= 1ll;
+        seg.assign(2 * sz, node());
+    }
+
+    node merge(node l, node r){
+        return{
+            l.v + r.v
+        };
+    }
+
+    node query(ll st, ll en) {
+        st = max(0ll, st); en = min(n, en);
+        if(st > en) return node();
+
+        node l = node(), r = node();
+        st += sz; en += sz;
+        while(st <= en){
+            if(st & 1) l = merge(l, seg[st++]);
+            if(!(en & 1)) r = merge(seg[en--], r);
+            st >>= 1; en >>= 1; 
+        }
+
+        return merge(l, r);
+    }
+
+    void set(ll idx, node val){
+        if(idx < 0 || idx > n) return;
+        ll p = idx + sz;
+        seg[p] = val;
+        for(p >>= 1ll; p; p >>= 1){
+            seg[p] = merge(seg[p << 1], seg[p << 1 | 1]);
+        }
+    }
+
+    void clear(){ fill(all(seg), node()); }
+}; _seg sx[2], sy[2];
+
+void run(){
+    cin >> n >> m;
+    for(int i = 0;i < 2;i++) sx[i] = {2 * m}, sy[i] = {2 * m};
+    for(int i = 1;i <= m;i++){
+        cin >> a[i].x >> a[i].y;
+        ll cx = a[i].x, cy = a[i].y;
+        a[i].x = cy - cx; a[i].y = cy + cx;
+        v.push_back(a[i].x); v.push_back(a[i].y);
+    }
+
+    sort(all(v)); v.erase(unique(all(v)), v.end());
+    for(int i = 0;i < v.size();i++) mp[v[i]] = i;
+
+    for(int i = 1;i <= m;i++){
+        auto& [cx, cy] = a[i];
+        ll now = cx & 1;
+
+        if(!mx[cx]){
+            result += n - abs(cx);
+
+            auto l = mp.lower_bound(abs(cx));
+            auto r = mp.upper_bound(2 * n - abs(cx) - 2);
+
+            ll mn = (l == mp.end() ? 0 : l->y);
+            ll mx = (r == mp.begin() ? 2 * m : (--r)->y);
+
+            result -= sy[now].query(mn, mx);
+            sx[now].set(mp[cx], 1);
+        }
+
+        if(!my[cy]){
+            result += n - abs(cy - n + 1);
+
+            ll s, e;
+            if (cy <= n - 1) {
+                s = -cy;
+                e = cy;
+            } 
+            else {
+                s = cy - 2 * (n - 1);
+                e = 2 * (n - 1) - cy;
+            }
+
+            auto l = mp.lower_bound(s), r = mp.upper_bound(e);
+            ll mn = (l == mp.end() ? 0 : l->y);
+            ll mx = (r == mp.begin() ? 2 * m : (--r)->y);
+
+            result -= sx[now].query(mn, mx);
+            sy[now].set(mp[cy], 1);
+        }
+
+        mx[cx] = my[cy] = 1;
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
