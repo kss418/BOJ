@@ -1,0 +1,115 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 3010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll sum[MAX], cnt[MAX];
+multiset <ll> ms;
+vector <ll> idx;
+
+void run(){
+    cin >> n >> m;
+    for(int i = 1;i <= 2 * n;i++){
+        ll x, y; cin >> x >> y;
+        if(!y) ms.insert(x);
+        else cnt[y]++, sum[y] += x;
+    }
+
+    while(cnt[m] < 2){
+        sum[m] += *--ms.end();
+        cnt[m]++; ms.erase(--ms.end());
+    }
+    
+    for(int i = 1;i <= n;i++){
+        if(!cnt[i]) idx.push_back(i);
+        if(cnt[i] == 2 || !cnt[i]) continue;
+        if(sum[i] > sum[m]){
+            cnt[i]++;
+            sum[i] += *--ms.end();
+            ms.erase(--ms.end());
+        }
+        else{
+            if(!ms.count(sum[m] - sum[i])) continue;
+            ms.erase(ms.lower_bound(sum[m] - sum[i]));
+            cnt[i]++; sum[i] = sum[m];
+        }
+    }
+
+    while(ms.size() >= 2 && !idx.empty()){
+        if(*--ms.end() <= sum[m]) break;
+        ll a = *--ms.end(); ms.erase(--ms.end());
+        ll b = *--ms.end(); ms.erase(--ms.end());
+        if(b <= sum[m]){ 
+            ms.insert(a); ms.insert(b);
+            break; 
+        }
+
+        sum[idx.back()] = a + b;
+        cnt[idx.back()] = 2;
+        idx.pop_back();
+    }
+    
+    vector <ll> tmp;
+    for(int i = 1;i <= n;i++){
+        if(cnt[i] == 1) tmp.push_back(i);
+    }
+
+    sort(all(tmp), [](ll a, ll b){
+        return sum[a] > sum[b];
+    });
+
+    for(auto& idx : tmp){
+        auto lb = ms.upper_bound(sum[m] - sum[idx]);
+        if(lb == ms.begin()){
+            sum[idx] += *--ms.end();
+            ms.erase(--ms.end());
+        }
+        else{
+            ll now = *--lb;
+            sum[idx] += now;
+            ms.erase(ms.lower_bound(now));
+        }
+
+        cnt[idx] = 2;
+    }
+    
+    while(!ms.empty()){
+        ll en = *--ms.end();
+        ms.erase(--ms.end());
+
+        auto lb = ms.upper_bound(sum[m] - en);
+        if(lb == ms.begin()){
+            sum[idx.back()] += en + *--ms.end();
+            ms.erase(--ms.end());
+        }
+        else{
+            ll now = *--lb;
+            sum[idx.back()] += en + now;
+            ms.erase(ms.lower_bound(now));
+        }
+
+        cnt[idx.back()] = 2; idx.pop_back();
+    }
+
+    ll result = 1;
+    for(int i = 1;i <= n;i++) result += sum[i] > sum[m];
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
