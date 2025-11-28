@@ -1,0 +1,62 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX], b[MAX], idx, pos;
+
+void run(){
+    cin >> n >> m;
+    for(int i = 1;i <= n;i++) cin >> a[i];
+    for(int i = 1;i <= n;i++) cin >> b[i];
+    cin >> idx >> pos;
+
+    if(pos + b[idx] - 1 >= m){ cout << "NO"; return; }
+    if(pos == a[idx]){ cout << "YES"; return; }
+
+    ll pre = 0, suf = 0;
+    for(int i = 1;i < idx;i++) pre += b[i];
+    for(int i = idx + 1;i <= n;i++) suf += b[i];
+    ll empty = m - b[idx] - pre - suf;
+
+    if(b[idx] <= empty){
+        ll ps = 0, ss = 0;
+        for(int i = 1;i <= n;i++){
+            if(i == idx) continue;
+            if(b[i] > empty) ss += b[i];
+        }
+
+        bool flag = 0;
+        for(int i = 1;i <= n;i++){
+            if(pos >= ps && pos + b[idx] - 1 <= m - ss - 1) flag = 1;
+            if(b[i] > empty && i != idx) ps += b[i], ss -= b[i];
+        }
+        if(pos >= ps && pos + b[idx] - 1 <= m - ss - 1) flag = 1;
+    
+        cout << (flag ? "YES" : "NO");
+    }
+    else{
+        ll ps = 0, ss = 0;
+        for(int i = 1;i < idx;i++) if(b[i] > empty) ps += b[i];
+        for(int i = idx + 1;i <= n;i++) if(b[i] > empty) ss += b[i];
+
+        cout << (pos >= ps && pos + b[idx] - 1 <= m - ss - 1 ? "YES" : "NO");
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
