@@ -1,0 +1,67 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll result = -1, org[MAX];
+bitset <MAX> bs[MAX];
+vector <ll> adj[MAX];
+pll a[MAX];
+
+ll cal(ll cur, bitset <MAX>& now){
+    ll mx1 = -1, mx2 = -1;
+    if(now.count() <= 1) return -1;
+    for(auto& nxt : adj[cur]){
+        if(!now[nxt]) continue;
+        if(a[nxt].x > mx1){
+            mx2 = max(mx2, mx1);
+            mx1 = a[nxt].x;
+        }
+        else if(a[nxt].x > mx2) mx2 = a[nxt].x;
+    }
+
+    return mx1 + mx2;
+}
+
+void run(){
+    cin >> n >> m;
+    for(int i = 1;i <= n;i++) cin >> a[i].x, a[i].y = i;
+    sort(a + 1, a + n + 1, greater<pll>());
+    for(int i = 1;i <= n;i++) org[a[i].y] = i;
+
+    while(m--){
+        ll s, e; cin >> s >> e;
+        s = org[s]; e = org[e];
+        bs[s][e] = bs[e][s] = 1;
+        adj[s].push_back(e);
+        adj[e].push_back(s);
+    }
+
+    for(int i = 1;i <= n;i++){
+        for(int j = i + 1;j <= n;j++){
+            bitset <MAX> now = bs[i] & bs[j];
+            ll c = cal(i, now); 
+            if(c == -1) continue;
+            result = max(result, c + a[i].x + a[j].x);
+        }
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
