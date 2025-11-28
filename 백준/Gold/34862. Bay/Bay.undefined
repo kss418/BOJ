@@ -1,0 +1,118 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 303; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+unordered_map <ll, bool> adj[MAX * MAX];
+ll dp[MAX][MAX], cnt, rx = INF, ry = INF;
+ll dy[4] = {0, 0, 1, -1}, dx[4] = {1, -1, 0, 0};
+bool root[MAX][MAX], v[MAX][MAX];
+
+pll org(ll num){ // cx, cy
+    return { num % n, num / n};
+}
+
+ll num(ll cx, ll cy){
+    return cy * n + cx;
+}
+
+bool outrange(ll cy, ll cx){
+    return cy < 0 || cy >= n - 1 || cx < 0 || cx >= n - 1;
+}
+
+void dfs(ll cy, ll cx, ll py = -1, ll px = -1){
+    if(v[cy][cx]) return; v[cy][cx] = 1;
+
+    for(int i = 0;i < 4;i++){
+        ll ny = cy + dy[i], nx = cx + dx[i];
+        if(ny == py && nx == px) continue;
+        if(dy[i] == 1 && adj[num(cx, cy + 1)][num(cx + 1, cy + 1)]) continue;
+        if(dy[i] == -1 && adj[num(cx, cy)][num(cx + 1, cy)]) continue;
+        if(dx[i] == 1 && adj[num(cx + 1, cy)][num(cx + 1, cy + 1)]) continue;
+        if(dx[i] == -1 && adj[num(cx, cy)][num(cx, cy + 1)]) continue;
+
+        if(outrange(ny, nx)){
+            root[cy][cx] = 1;
+            continue;
+        }
+    }
+}
+
+ll solve(ll cy, ll cx, ll py = -1, ll px = -1, ll p1 = -1, ll p2 = -1){
+    ll& ret = dp[cy][cx];
+    if(ret != -1) return ret; ret = 1;
+
+    for(int i = 0;i < 4;i++){
+        ll ny = cy + dy[i], nx = cx + dx[i];
+        if(ny == py && nx == px) continue;
+
+        ll s = -1, e = -1;
+        if(dy[i] == 1) s = num(cx, cy + 1), e = num(cx + 1, cy + 1);
+        if(dy[i] == -1) s = num(cx, cy), e = num(cx + 1, cy);
+        if(dx[i] == 1) s = num(cx + 1, cy), e = num(cx + 1, cy + 1);
+        if(dx[i] == -1) s = num(cx, cy), e = num(cx, cy + 1);
+
+        if(adj[s][e]) continue;
+        if(outrange(ny, nx)){
+            p1 = s; p2 = e; 
+            continue;
+        }
+
+        ret += solve(ny, nx, cy, cx, s, e);
+    }
+
+    if(ret == m){
+        cnt++; p1++; p2++;
+        if(p1 > p2) swap(p1, p2);
+        if(rx > p1) rx = p1, ry = p2;
+        else if(rx == p1) ry = min(ry, p2);
+    }
+
+    return ret;
+}
+
+void mktree(){
+    for(int i = 0;i < n - 1;i++){
+        dfs(i, 0);
+        dfs(i, n - 2);
+        dfs(0, i);
+        dfs(n - 2, i);
+    }
+
+    for(int i = 0;i < n - 1;i++){
+        for(int j = 0;j < n - 1;j++){
+            if(!root[i][j]) continue;
+            solve(i, j);
+        }
+    }
+}
+
+void run(){
+    cin >> n >> m; memset(dp, -1, sizeof(dp));
+    for(int i = 1;i < n * n;i++){
+        ll s, e; cin >> s >> e; s--; e--;
+        adj[s][e] = adj[e][s] = 1;
+    }
+
+    mktree();
+    cout << cnt << "\n";
+    if(!cnt) rx = 0, ry = 0;
+    cout << rx << " " << ry;
+}   
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
