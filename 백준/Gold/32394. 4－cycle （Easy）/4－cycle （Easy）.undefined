@@ -1,0 +1,76 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010; // SET MAX SIZE
+constexpr ll MOD = 1e9 + 7;
+ll dp[MAX][MAX][3];
+vector <ll> adj[MAX];
+
+class _inv {
+public:
+    _inv() {}
+    ll pow_mod(ll a, ll b, ll c) {
+        if (!b) return 1;
+        ll ret = pow_mod(a, b / 2, c) % c;
+
+        if (b % 2) return ((ret * ret) % c * (a % c)) % c;
+        return (ret * ret) % c;
+    }
+
+    ll prime_inv(ll a, ll b) {
+        return pow_mod(a, b - 2, b);
+    }
+
+    ll ret(ll a, ll b, ll m) { // (a * b^-1) % m 반환 m == prime
+        return (a % m * prime_inv(b, m) % m) % m;
+    }
+}; _inv inv;
+
+void run(){
+    cin >> n >> m;
+    while(m--){
+        ll s, e; cin >> s >> e;
+        adj[s].push_back(e);
+        adj[e].push_back(s);
+        dp[s][e][1] = 1;
+        dp[e][s][1] = 1;
+    }
+
+    for(int s = 1;s <= n;s++){
+        for(int m = 1;m <= n;m++){
+            if(s == m) continue;
+            for(auto& e : adj[m]){
+                if(s == e) continue;
+                dp[s][e][2] += dp[s][m][1];
+                dp[s][e][2] %= MOD;
+            }
+        }
+    }
+    
+    ll result = 0;
+    for(int i = 1;i <= n;i++){
+        for(int j = i + 1;j <= n;j++){
+            result += (dp[i][j][2] * (dp[i][j][2] - 1)) % MOD * inv.ret(1, 2, MOD);
+            result %= MOD;
+        }
+    }
+
+    cout << inv.ret(result, 2, MOD);
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
