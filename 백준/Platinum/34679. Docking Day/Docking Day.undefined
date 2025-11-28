@@ -1,0 +1,144 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 4; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX], b[MAX], fi[MAX];
+vector <ll> v1, v2, v3[4];
+unordered_map <ll, ll> mp;
+
+constexpr ll MUL = 1010101;
+class node{
+public:
+    ll a, b, c;
+    ll num(){
+        return MUL * MUL * a + MUL * b + c;
+    }
+}; deque <node> q;
+unordered_map <ll, ll> d;
+
+void push(node a, ll now){
+    if(d.count(a.num())) return;
+    q.push_back(a); d[a.num()] = now + 1;
+}
+
+void push(node& cur){
+    ll a[4] = {0,cur.a, cur.b, cur.c};
+    if((a[1] < a[2] && a[1] < a[3]) || (a[1] > a[2] && a[1] > a[3])){
+        ll mn = min(a[2], a[3]), mx = max(a[2], a[3]);
+        for(int i = mn + 1;i < mx;i++){
+            node now = {i, a[2], a[3]};
+            push(now, d[cur.num()]);
+        }
+    }
+    else{
+        ll mn = min(a[2], a[3]), mx = max(a[2], a[3]);
+        for(int i = 0;i < mn;i++){
+            node now = {i, a[2], a[3]};
+            push(now, d[cur.num()]);
+        }
+
+        for(int i = mx + 1;i < mp[v2[2]] + 4;i++){
+            node now = {i, a[2], a[3]};
+            push(now, d[cur.num()]);
+        }
+    }
+
+    if((a[2] < a[1] && a[2] < a[3]) || (a[2] > a[1] && a[2] > a[3])){
+        ll mn = min(a[1], a[3]), mx = max(a[1], a[3]);
+        for(int i = mn + 1;i < mx;i++){
+            node now = {a[1], i, a[3]};
+            push(now, d[cur.num()]);
+        }
+    }
+    else{
+        ll mn = min(a[1], a[3]), mx = max(a[1], a[3]);
+        for(int i = 0;i < mn;i++){
+            node now = {a[1], i, a[3]};
+            push(now, d[cur.num()]);
+        }
+
+        for(int i = mx + 1;i < mp[v2[2]] + 4;i++){
+            node now = {a[1], i, a[3]};
+            push(now, d[cur.num()]);
+        }
+    }
+
+    if((a[3] < a[1] && a[3] < a[2]) || (a[3] > a[1] && a[3] > a[2])){
+        ll mn = min(a[1], a[2]), mx = max(a[1], a[2]);
+        for(int i = mn + 1;i < mx;i++){
+            node now = {a[1], a[2], i};
+            push(now, d[cur.num()]);
+        }
+    }
+    else{
+        ll mn = min(a[1], a[2]), mx = max(a[1], a[2]);
+        for(int i = 0;i < mn;i++){
+            node now = {a[1], a[2], i};
+            push(now, d[cur.num()]);
+        }
+
+        for(int i = mx + 1;i < mp[v2[2]] + 4;i++){
+            node now = {a[1], a[2], i};
+            push(now, d[cur.num()]);
+        }
+    }
+}
+
+void run(){
+    for(int i = 1;i <= 3;i++) cin >> a[i], v1.push_back(a[i]);
+    for(int i = 1;i <= 3;i++) cin >> b[i], v2.push_back(b[i]); 
+
+    sort(all(v2)); sort(all(v1)); mp[v2[0]] = 3;
+    mp[v2[1]] = mp[v2[0]] + min(v2[1] - v2[0], 4ll);
+    mp[v2[2]] = mp[v2[1]] + min(v2[2] - v2[1], 4ll);
+    
+    ll f = 0;
+    for(auto& i : v1){
+        if(i == v2[0] || i == v2[1] || i == v2[2]) continue;
+        else if(i < v2[0]) v3[0].push_back(i);
+        else if(i > v2[0] && i < v2[1]) v3[1].push_back(i);
+        else if(i > v2[1] && i < v2[2]) v3[2].push_back(i);
+        else v3[3].push_back(i);
+    }
+
+    ll cnt = 1;
+    for(int i = v3[0].size() - 1;i >= 0;i--){
+        mp[v3[0][i]] = mp[v2[0]] - cnt; cnt++;
+    }
+
+    for(int i = 1;i <= 3;i++){
+        for(int j = 0;j < v3[i].size();j++){
+            mp[v3[i][j]] = mp[v2[i - 1]] + j + 1;
+        }
+    }
+
+    for(int i = 1;i <= 3;i++) a[i] = mp[a[i]], b[i] = mp[b[i]];
+
+    node st = {a[1], a[2], a[3]};
+    q.push_back(st); d[st.num()] = 0;
+    while(!q.empty()){
+        auto cur = q.front(); q.pop_front();
+        push(cur);
+    }
+
+    node en = {b[1], b[2], b[3]};
+    cout << d[en.num()];
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
