@@ -1,0 +1,61 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 2010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll dp[2 * MAX][2 * MAX], mp[501010], op[2 * MAX];
+pll a[MAX];
+vector <ll> v;
+
+ll solve(ll l, ll r){
+    ll& ret = dp[l][r];
+    if(ret != -1) return ret; ret = 0;
+    if(l > r) return ret;
+
+    ret = max(ret, solve(l + 1, r));
+    ret = max(ret, solve(l, r - 1));
+    if(op[l] >= l && op[l] <= r){
+        ret = max(ret, solve(l, op[l] - 1) + solve(op[l] + 1, r) + 1);
+    }
+
+    if(op[r] >= l && op[r] <= r){
+        ret = max(ret, solve(l, op[r] - 1) + solve(op[r] + 1, r) + 1);
+    }
+
+    return ret;
+}
+
+void run(){
+    cin >> n; memset(dp, -1, sizeof(dp));
+    for(int i = 1;i <= n;i++){
+        cin >> a[i].x >> a[i].y;
+        v.push_back(a[i].x); v.push_back(a[i].y);
+    }
+    sort(all(v));
+    for(int i = 0;i < v.size();i++) mp[v[i]] = i + 1;
+
+    for(int i = 1;i <= n;i++){
+        a[i] = {mp[a[i].x], mp[a[i].y]};
+        op[a[i].x] = a[i].y;
+        op[a[i].y] = a[i].x;
+    }
+
+    cout << solve(1, 2 * n);
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
