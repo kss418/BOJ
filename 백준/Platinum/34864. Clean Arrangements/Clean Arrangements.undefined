@@ -1,0 +1,60 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 5010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+vector <ll> adj[MAX];
+vector <pll> dp;
+ll result;
+
+pll solve(ll cur, ll pre = -1){
+    pll& ret = dp[cur];
+    if(ret.x != -1) return ret; ret = {0, 0};
+
+    vector <pll> arr;
+    for(auto& nxt : adj[cur]){
+        if(pre == nxt) continue;
+        arr.push_back(solve(nxt, cur));
+    }
+
+    sort(all(arr), [](pll& a, pll& b){
+        return a.x + a.y < b.x + b.y;
+    });
+
+    for(auto& [cx, cy] : arr){
+        ll& now = (ret.x <= ret.y ? ret.x : ret.y);
+        result += now + min(cx, cy) + 1;
+        now += cx + cy + 1;
+    }
+
+    return ret;
+}
+
+void run(){
+    cin >> n; dp.resize(MAX + 1, pll(-1, -1));
+    for(int i = 1;i < n;i++){
+        ll s, e; cin >> s >> e;
+        adj[s].push_back(e);
+        adj[e].push_back(s);
+    }
+
+    pll ret = solve(1);
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
