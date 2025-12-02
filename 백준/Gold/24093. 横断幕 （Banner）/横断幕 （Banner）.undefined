@@ -1,0 +1,65 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 404; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX][MAX], sum[MAX][MAX][3][3], result;
+
+void run(){
+    cin >> n >> m;
+    for(int i = 1;i <= n;i++){
+        for(int j = 1;j <= m;j++) cin >> a[i][j];
+    }
+
+    for(int i = 1;i <= n;i++){
+        for(int j = 1;j <= m;j++){
+            for(int k = j + 1;k <= m;k++){
+                ll mn = min(a[i][j], a[i][k]);
+                ll mx = max(a[i][j], a[i][k]);
+                if(mn == mx){
+                    if(!mn) result += sum[j][k][1][2];
+                    else if(mn == 1) result += sum[j][k][0][2];
+                    else result += sum[j][k][0][1];
+                }
+                else{
+                    if(mn && mx){
+                        result += sum[j][k][0][0];
+                        result += sum[j][k][0][1];
+                        result += sum[j][k][0][2];
+                    }
+                    else if(mn != 1 && mx != 1){
+                        result += sum[j][k][0][1];
+                        result += sum[j][k][1][1];
+                        result += sum[j][k][1][2];
+                    }
+                    else{
+                        result += sum[j][k][0][2];
+                        result += sum[j][k][1][2];
+                        result += sum[j][k][2][2];
+                    }
+                }
+
+                sum[j][k][mn][mx]++;
+            }
+        }
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
