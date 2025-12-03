@@ -43,15 +43,11 @@ void run(){
         v = st.top().x; st.pop();
     }
     if(mn != INF && v != 1) q.push_back({mn, mx});
+    for(auto& [x, y] : q) use[x] = use[y + 1] = 1;
 
-    ll px = -1, py = -1; cout << 1 << " "; use[1] = 1;
-    for(auto& [x, y] : q){
-        if(py != -1 && py < x){
-            for(int i = px;i < x;i++){
-                if(use[i]) continue; use[i] = 1;
-                cout << i << " ";
-            }
-        }
+    cout << 1 << " "; use[1] = 1;
+    for(int i = 0;i < q.size();i++){
+        auto& [x, y] = q[i];
 
         while(!one.empty() && one.front() < x){
             ll f = one.front(); one.pop_front();
@@ -60,8 +56,12 @@ void run(){
         }
 
         cout << y + 1 << " " << x << " ";
-        use[y + 1] = use[x] = 1;
-        px = x; py = y + 1;
+        if(i != (int)q.size() - 1 && q[i + 1].x > y){
+            for(int j = x;j < q[i + 1].x;j++){
+                if(use[j]) continue;
+                use[j] = 1; cout << j << " ";
+            }
+        }
     }
 
     for(int i = 1;i <= n;i++){
