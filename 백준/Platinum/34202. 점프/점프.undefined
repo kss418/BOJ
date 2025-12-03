@@ -1,0 +1,78 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX], now = 1;
+bool use[MAX];
+stack <pll> st;
+deque <pll> q;
+deque <ll> one;
+
+void run(){
+    cin >> n; 
+    for(int i = 1;i < n;i++){
+        cin >> a[i];
+
+        ll mn = INF, mx = MINF, v = -1;
+        while(!st.empty() && st.top().x > a[i]){
+            mx = max(mx, st.top().y);
+            mn = min(mn, st.top().y);
+            v = st.top().x; st.pop();
+        }
+
+        if(mn != INF && v != 1) q.push_back({mn, mx});
+        st.push({a[i], i});
+        if(a[i] == 1) one.push_back(i);
+    }
+
+    ll mn = INF, mx = MINF, v = -1;
+    while(!st.empty()){
+        mx = max(mx, st.top().y);
+        mn = min(mn, st.top().y);
+        v = st.top().x; st.pop();
+    }
+    if(mn != INF && v != 1) q.push_back({mn, mx});
+
+    ll px = -1, py = -1; cout << 1 << " "; use[1] = 1;
+    for(auto& [x, y] : q){
+        if(py != -1 && py < x){
+            for(int i = px;i < x;i++){
+                if(use[i]) continue; use[i] = 1;
+                cout << i << " ";
+            }
+        }
+
+        while(!one.empty() && one.front() < x){
+            ll f = one.front(); one.pop_front();
+            if(use[f]) continue; use[f] = 1;
+            cout << f << " ";
+        }
+
+        cout << y + 1 << " " << x << " ";
+        use[y + 1] = use[x] = 1;
+        px = x; py = y + 1;
+    }
+
+    for(int i = 1;i <= n;i++){
+        if(use[i]) continue;
+        use[i] = 1; cout << i << " ";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
