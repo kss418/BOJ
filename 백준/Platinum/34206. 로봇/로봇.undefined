@@ -1,0 +1,132 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 301010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+pll a[MAX];
+bool use[MAX];
+i128 nxt[MAX], sum[MAX];
+vector <ll> vec;
+
+class _st { // 1-base index
+public:
+    ll n, m; vector <vector<ll>> lift, sum;
+    _st(){};
+    _st(ll n, ll m) : n(n), m(m) { //n 개수 m 깊이
+        lift.resize(log2(m + 1) + 1, vector<ll>(n + 1, 0));
+        sum.resize(log2(m + 1) + 1, vector<ll>(n + 1, 0));
+    }
+
+    void add(ll st, ll en, ll co = 1) {
+        lift[0][st] = en;
+        sum[0][st] = co;
+    }
+
+    void init() {
+        for (int i = 1; i <= log2(m + 1); i++) {
+            for (int j = 1; j <= n;j++){
+                ll mid = lift[i - 1][j];
+                lift[i][j] = lift[i - 1][mid];
+                sum[i][j] = min(sum[i - 1][j] + sum[i - 1][mid], INF);
+            }
+        }
+    }
+
+    pll ret(ll n, ll d) { //n 노드 d 깊이
+        ll co = 0;
+        for (int i = log2(m + 1); i >= 0; i--) {
+            if (d >= sum[i][n]){
+                co += sum[i][n];
+                d -= sum[i][n];
+                n = lift[i][n];
+            }
+        }
+
+        return {n, co}; // 정점, 연산 횟수
+    }
+}; _st st;
+
+template <typename T = ll>
+class _bs { // 0-based index
+public:
+    T l, r, idx;
+    i128 num;
+    _bs(T l, T r, T idx, i128 num) : idx(idx), num(num) {
+        this->l = l; this->r = r;
+    }
+
+    bool f(T cur) {
+        i128 now = sum[cur] - sum[idx];
+        return now <= num;
+    }
+
+    T ret() {
+        T lo = l, hi = r, mid = -1;
+        while (hi > lo) {
+            mid = (hi + lo + 1) / (T)2;
+            if (f(mid)) lo = mid;
+            else hi = mid - 1;
+        }
+
+        return lo;
+    }
+};
+
+ll solve(ll pos, ll v){
+    if(pos < a[1].x) return pos - v;
+    ll idx = upper_bound(all(vec), pos) - vec.begin();
+    if(pos - a[idx].x >= v) return pos - v;
+    v -= pos - a[idx].x;
+
+    auto [now, use] = st.ret(idx, v);
+    v -= use; pos = a[now].x;
+    i128 pl = a[now].y;
+
+    while(v){
+        v--; pos += pl;
+        ll mn = min<ll>(v, pl);
+        pos -= mn; v -= mn; pl *= 2;
+    }
+
+    return pos;
+}
+
+void run(){
+    cin >> n; st = {n, n};
+    for(int i = 1;i <= n;i++) cin >> a[i].x >> a[i].y, vec.push_back(a[i].x);
+    for(int i = 1;i < n;i++){
+        i128 now = a[i].x, pl = a[i].y, sum = 1;
+        while(now + pl < a[i + 1].x){
+            sum += pl + 1; pl *= 2;
+        }
+
+        ll idx = upper_bound(all(vec), now + pl) - vec.begin();
+        sum += (ll)(now + pl - a[idx].x);
+        st.add(i, idx, sum); use[i] = 1;
+    }
+    for(int i = 1;i <= n;i++) if(!use[i]) st.add(i, i, INF);
+    st.init();
+
+    cin >> m;
+    while(m--){
+        ll pos, v; cin >> pos >> v;
+        cout << solve(pos, v) << "\n";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
