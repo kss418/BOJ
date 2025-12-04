@@ -1,0 +1,73 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 404; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll all[3];
+vector <ll> arr[26];
+vector <vector <vector<ll>>> dp[3]; 
+
+ll solve(ll cr, ll cg, ll cb, ll la){
+    ll& ret = dp[la][cr][cg][cb];
+    if(ret != -1) return ret; ret = INF;
+    if(cr + cg + cb == 1){
+        if(cr && !la) return ret = arr[0][0];
+        if(cg && la == 1) return ret = arr[1][0];
+        if(cb && la == 2) return ret = arr[2][0];
+        return ret = INF;
+    }
+
+    ll now = cr + cg + cb - 1;
+    for(int i = 0;i < 3;i++){
+        if(i == la) continue;
+        if(!la && cr){
+            ret = min(ret, solve(cr - 1, cg, cb, i) + max(arr[0][cr - 1] - now, 0ll));
+        }
+        else if(la == 1 && cg){
+            ret = min(ret, solve(cr, cg - 1, cb, i) + max(arr[1][cg - 1] - now, 0ll));   
+        }
+        else if(la == 2 && cb){
+            ret = min(ret, solve(cr, cg, cb - 1, i) + max(arr[2][cb - 1] - now, 0ll));
+        }
+    }
+
+    return ret;
+}
+
+void run(){
+    cin >> n >> s;
+    for(int i = 0;i < n;i++){
+        if(s[i] == 'R') arr[0].push_back(i);
+        else if(s[i] == 'G') arr[1].push_back(i);
+        else arr[2].push_back(i);
+    }
+    
+    for(int i = 0;i < 3;i++) all[i] = arr[i].size();
+    for(int i = 0;i < 3;i++){
+        dp[i].resize(all[0] + 1);
+        for(int j = 0;j <= all[0];j++){
+            dp[i][j].resize(all[1] + 1, vector<ll>(all[2] + 1, -1));
+        }
+    }
+
+    ll result = INF;
+    for(int i = 0;i < 3;i++) result = min(result, solve(all[0], all[1], all[2], i));
+    cout << (result == INF ? -1 : result);
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
