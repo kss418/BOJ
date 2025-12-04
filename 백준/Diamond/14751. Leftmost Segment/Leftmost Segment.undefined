@@ -1,0 +1,120 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+class line{
+public:
+    ll a, b, x, idx;
+    bool operator < (const line& ot) const{
+        return a < ot.a;
+    } 
+}; vector <line> v;
+
+class _cht{
+public:
+    class line{
+    public:
+        ll a, b, x, id; line(){}
+        line(ll a, ll b, ll x = -1, ll id = -1) : a(a), b(b), x(x), id(id){}
+        ll f(ll x) const { return a * x + b; }
+    };
+    line id_line() const{ return is_min ? line(0, INF) : line(0, MINF);}
+
+    vector<line> v;
+    bool is_min = 1; ll idx = 0;
+    _cht(bool is_min = 1) : is_min(is_min) {}
+    void clear(){ v.clear(); idx = 0; }
+
+    bool chk(const line& a, const line& b, const line& c) const{
+        i128 x1 = (i128)(a.b - b.b) * (c.a - b.a), x2 = (i128)(b.b - c.b) * (b.a - a.a);
+        return is_min ? x1 <= x2 : x1 >= x2;
+    }
+
+    bool better(const line& a, const line& b, ll x) const{
+        i128 y1 = (i128)a.a * x + a.b, y2 = (i128)b.a * x + b.b;
+        if(y1 == y2) return a.x < b.x;
+        return is_min ? y1 <= y2 : y1 >= y2; 
+    }
+
+    // 기울기가 같은 두 직선을 비교
+    bool better_same(const line& a, const line& b) const{
+        if(a.b == b.b) return a.x < b.x;
+        return is_min ? a.b <= b.b : a.b >= b.b;
+    }
+
+    // 기울기 단조 증가 순으로 넣을 것
+    void add(line cur){
+        if (!v.empty() && v.back().a == cur.a){
+            if (!better_same(cur, v.back())) return;
+            v.pop_back();
+        }
+
+        while (v.size() >= 2 && chk(v[v.size() - 2], v.back(), cur)) v.pop_back();
+        v.push_back(cur);
+        if (idx >= (ll)v.size()) idx = (ll)v.size() - 1;
+    }
+
+    // 단조 증가 순으로 넣을 것
+    line ls(ll x){
+        if(v.empty()) return id_line();
+        while (idx + 1 < (ll)v.size() && better(v[idx + 1], v[idx], x)) idx++;
+        return v[idx];
+    }
+
+    line bs(ll x) const{
+        if(v.empty()) return id_line();
+        ll lo = 0, hi = (ll)v.size() - 1;
+        while (lo < hi){
+            ll mid = (lo + hi) >> 1ll;
+            if (better(v[mid + 1], v[mid], x)) lo = mid + 1;
+            else hi = mid;
+        }
+        return v[lo];
+    }
+};
+
+void run(){
+    ll y1, y2; cin >> y2 >> y1 >> n; _cht cht(1);
+    for(int i = 1;i <= n;i++){
+        ll s, e; cin >> s >> e;
+        ll a = e - s;
+        ll b = s * (y2 - y1) * 1000;
+        v.push_back({a, b, s, i});
+    }   
+    sort(all(v));
+    for(auto& [a, b, x, idx] : v) cht.add({a, b, x, idx});
+
+    cin >> m;
+    while(m--){
+        cin >> s; ll now = 0, c = 0, f = 0;
+        for(auto& i : s){
+            if(i == '-') continue;
+            if(i == '.'){ f = 1; continue; }
+            now *= 10;
+            now += i - '0';
+            if(f) c++;
+        }
+
+        for(int i = 2;i >= c;i--) now *= 10;
+        if(s[0] == '-') now *= -1;
+        cout << cht.bs(1000 * y2 - now).id << "\n";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
