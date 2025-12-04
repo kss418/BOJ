@@ -14,7 +14,7 @@ constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 404; // SET MAX SIZE
 constexpr ll MOD = 998244353;
 ll all[3];
-vector <ll> arr[26];
+vector <ll> arr[3];
 vector <vector <vector<ll>>> dp[3]; 
 
 ll solve(ll cr, ll cg, ll cb, ll la){
@@ -31,13 +31,19 @@ ll solve(ll cr, ll cg, ll cb, ll la){
     for(int i = 0;i < 3;i++){
         if(i == la) continue;
         if(!la && cr){
-            ret = min(ret, solve(cr - 1, cg, cb, i) + max(arr[0][cr - 1] - now, 0ll));
+            ll a = max(cg - (upper_bound(all(arr[1]), arr[0][cr - 1]) - arr[1].begin()), 0ll);
+            ll b = max(cb - (upper_bound(all(arr[2]), arr[0][cr - 1]) - arr[2].begin()), 0ll);
+            ret = min(ret, solve(cr - 1, cg, cb, i) + max(arr[0][cr - 1] + a + b - now, 0ll));
         }
         else if(la == 1 && cg){
-            ret = min(ret, solve(cr, cg - 1, cb, i) + max(arr[1][cg - 1] - now, 0ll));   
+            ll a = max(cr - (upper_bound(all(arr[0]), arr[1][cg - 1]) - arr[0].begin()), 0ll);
+            ll b = max(cb - (upper_bound(all(arr[2]), arr[1][cg - 1]) - arr[2].begin()), 0ll);
+            ret = min(ret, solve(cr, cg - 1, cb, i) + max(arr[1][cg - 1] + a + b - now, 0ll));   
         }
         else if(la == 2 && cb){
-            ret = min(ret, solve(cr, cg, cb - 1, i) + max(arr[2][cb - 1] - now, 0ll));
+            ll a = max(cr - (upper_bound(all(arr[0]), arr[2][cb - 1]) - arr[0].begin()), 0ll);
+            ll b = max(cg - (upper_bound(all(arr[1]), arr[2][cb - 1]) - arr[1].begin()), 0ll);
+            ret = min(ret, solve(cr, cg, cb - 1, i) + max(arr[2][cb - 1] + a + b - now, 0ll));
         }
     }
 
@@ -66,7 +72,7 @@ void run(){
 }
 
 int main() {
-    fastio; // cin >> t;
+    fastio; // cin >> t;RRRGYYY
     while(t--) run(); 
 
     return 0;
