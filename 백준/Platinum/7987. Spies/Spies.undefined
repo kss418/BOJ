@@ -1,0 +1,75 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010101; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX], ind[MAX], result;
+bool use[MAX];
+deque <ll> q;
+
+class _uf { 
+public:
+    ll n; vector <ll> p, sz;
+    
+    _uf(){}
+    _uf(ll n) {  
+        this->n = n;
+        p.resize(n + 1, -1); sz.resize(n + 1, 1);
+    }
+
+    ll find(ll num) { 
+        if (p[num] == -1) return num;
+        return p[num] = find(p[num]);
+    }
+
+    void merge(ll a, ll b) {
+        a = find(a); b = find(b);
+        if (a == b) return;
+        if (size(a) < size(b)) swap(a, b);
+        p[b] = a, sz[a] += sz[b];
+    }
+
+    ll size(ll num){ return sz[find(num)]; }
+    bool same(ll a, ll b) { return find(a) == find(b); }
+    void clear(){ p.assign(n + 1, -1); sz.assign(n + 1, 1); }
+}; 
+
+void run(){
+    cin >> n; _uf uf(n);
+    for(int i = 1;i <= n;i++) cin >> a[i], ind[a[i]]++;
+    for(int i = 1;i <= n;i++) if(!ind[i]) q.push_back(i);
+
+    while(!q.empty()){
+        auto cur = q.front(); q.pop_front();
+        if(use[cur]) continue;
+        ll nxt = a[cur]; ind[nxt]--; 
+        if(!use[cur] && !use[nxt]){
+            use[cur] = use[nxt] = 1;
+            result++;
+            if(!--ind[a[nxt]]) q.push_back(a[nxt]);
+        }
+        else if(!ind[nxt]) q.push_back(nxt);
+    }
+
+    for(int i = 1;i <= n;i++) if(ind[i] > 0) uf.merge(i, a[i]);
+    for(int i = 1;i <= n;i++) if(uf.find(i) == i) result += uf.size(i) / 2;
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
