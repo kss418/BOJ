@@ -1,0 +1,96 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 505; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll deg[MAX];
+bool adj[MAX][MAX];
+
+template <size_t n, size_t m>
+class _gf2{ // 0-based index
+public:
+    vector <bitset <m + 1>> bs;
+    _gf2() : bs(n){}
+    void set_a(ll cy, ll cx, bool v){ bs[cy][cx] = v; }
+    void set_b(ll cy, bool v){ bs[cy][m] = v; }
+
+    // 해가 존재하면 1, 아니면 0 반환
+    // 해는 result에 담김
+    bool ret(bitset <m>& result){
+        vector <ll> pos(m, -1);
+        ll cy = 0;
+        for(ll cx = 0;cx < m && cy < n; cx++){
+            ll now = -1;
+            for(int i = cy;i < n;i++){
+                if(!bs[i][cx]) continue;
+                now = i; break;
+            }
+            if(now == -1) continue;
+
+            swap(bs[now], bs[cy]);
+            pos[cx] = cy;
+
+            for(int i = 0;i < n;i++){
+                if(i == cy || !bs[i][cx]) continue;
+                bs[i] ^= bs[cy];
+            }
+
+            cy++;
+        }
+
+        for(int i = 0;i < n;i++){
+            bool flag = 1;
+            for(int j = 0;j < m;j++){
+                if(!bs[i][j]) continue;
+                flag = 0; break;
+            }
+
+            if(flag && bs[i][m]) return 0;
+        }
+
+        result.reset();
+        for(int i = 0;i < m;i++) result[i] = (pos[i] != -1 ? bs[pos[i]][m] : 0);
+        return 1;
+    }
+
+    void clear(){ for(int i = 0;i < n;i++) bs[i].reset(); }
+};
+
+void run(){
+    cin >> n >> m; _gf2 <MAX, MAX> gf;
+    while(m--){
+        ll s, e; cin >> s >> e; s--; e--;
+        deg[s]++; deg[e]++;
+        adj[s][e] = adj[e][s] = 1;
+        gf.set_a(s, e, 1);
+        gf.set_a(e, s, 1);
+    }
+
+    for(int i = 0;i < n;i++){
+        if(deg[i] % 2 == 0) continue;
+        gf.set_a(i, i, 1);
+        gf.set_b(i, 1);
+    }
+
+    bitset <MAX> result;
+    bool flag = gf.ret(result);
+    if(!flag) cout << "IMPOSSIBLE";
+    else for(int i = 0;i < n;i++) cout << (result[i] == 0 ? 'A' : 'B');
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
