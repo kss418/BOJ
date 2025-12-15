@@ -1,0 +1,127 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX];
+
+class _flow {
+public:
+    int n;
+    vector <int> d, w;
+
+    class edge {
+    public:
+        int nxt, rev; ll c;
+        edge(){}
+        edge(int nxt, int rev, ll c) : nxt(nxt), rev(rev), c(c) {}
+    };
+    vector <vector<edge>> adj;
+
+    _flow(int n) : n(n) {
+        d.resize(n + 1); w.resize(n + 1);
+        adj.resize(n + 1);
+    }
+
+    void addsol(int st, int en, ll c = 1) {
+        int re = (int)adj[en].size();
+        int rs = (int)adj[st].size();
+        adj[st].push_back({en, re, c});
+        adj[en].push_back({st, rs, 0});
+    }
+
+
+    bool bfs(int st, int en) { // sink 도달 여부 반환
+        memset(d.data(), -1, sizeof(int) * (n + 1));
+        d[st] = 0;
+
+        queue <int> q;
+        q.push(st);
+        while (!q.empty()) {
+            int cur = q.front(); q.pop();
+            for (auto& e : adj[cur]) {
+                if(e.c <= 0) continue;
+                int nxt = e.nxt;
+                if (d[nxt] != -1) continue;
+
+                d[nxt] = d[cur] + 1; 
+                if(nxt == en) return 1;
+                q.push(nxt);
+            }
+        }
+
+        return d[en] != -1;
+    }
+
+    ll dfs(int cur, int en, ll val) { // sink 도달 최대 유량 반환
+        if (cur == en) return val;
+
+        int &i = w[cur], sz = adj[cur].size();
+        for(;i < sz;++i){
+            edge &e = adj[cur][i];
+            if(e.c <= 0) continue;
+            int nxt = e.nxt;
+            if(d[nxt] != d[cur] + 1) continue;
+
+            ll mn = dfs(nxt, en, min(val, e.c));
+            if(mn <= 0) continue;
+
+            e.c -= mn;
+            adj[nxt][e.rev].c += mn;
+            return mn;
+        }
+
+        return 0;
+    }
+
+    ll ret(int st, int en) {
+        ll r = 0;
+        while (bfs(st, en)) {
+            memset(w.data(), 0, sizeof(int) * (n + 1));
+            while (1) {
+                ll f = dfs(st, en, INF);
+                if (!f) break;
+                r += f;
+            }
+        }
+
+        return r;
+    }
+};
+
+void run(){
+    cin >> n >> m; _flow flow(2 * n);
+    ll s, e; cin >> s >> e;
+
+    for(int i = 1;i <= n;i++) cin >> a[i];
+    while(m--){
+        ll s, e; cin >> s >> e;
+        flow.addsol(s + n, e, INF);
+        flow.addsol(e + n, s, INF);
+    }
+
+    for(int i = 1;i <= n;i++) flow.addsol(i, i + n, a[i]);
+    flow.ret(s, e + n);
+
+    for(int i = 1;i <= n;i++){
+        if(flow.d[i] == -1 || flow.d[i + n] != -1) continue;
+        cout << i << " ";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
