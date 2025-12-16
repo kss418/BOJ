@@ -1,0 +1,59 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX], dp[MAX][3], la[MAX];
+vector <ll> v, idx[MAX];
+map <ll, ll> mp;
+
+void run(){
+    cin >> n; 
+    for(int i = 1;i <= n;i++) cin >> a[i], v.push_back(a[i]);
+    sort(all(v)); v.erase(unique(all(v)), v.end());
+    for(int i = 0;i < v.size();i++) mp[v[i]] = i + 1;
+    for(int i = 1;i <= n;i++){
+        a[i] = mp[a[i]];
+        idx[a[i]].push_back(i);
+    }
+
+    ll result = INF;
+    for(int i = 1;i <= n;i++){
+        ll now = a[i], pre = a[i] - 1;
+        if(idx[now].back() == i){
+            ll lb = lower_bound(all(idx[pre]), idx[now][0]) - idx[pre].begin() - 1;
+            
+            if(lb == -1) dp[i][1] = idx[now].size();
+            else{
+                ll num = idx[pre][lb]; 
+                dp[i][1] = max(dp[num][1], dp[num][0]) + idx[now].size();
+            }
+        }
+  
+        dp[i][0] = dp[la[now]][0] + 1;
+        dp[i][2] = max({dp[la[pre]][0], dp[la[pre]][1], dp[la[now]][2]}) + 1;
+     
+
+        la[a[i]] = i;
+        for(int j = 0;j < 3;j++) result = min(result, n - dp[i][j]);
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
