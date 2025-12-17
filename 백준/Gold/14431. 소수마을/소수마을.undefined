@@ -1,0 +1,156 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+pll a[MAX];
+
+class _dij {
+public:
+    class node{
+    public:
+        ll d;
+        node() : node(0){}
+        node(ll d) : d(d){}
+        ll num() const{ return d; }
+        bool operator<(const node& ot) const{ return num() < ot.num(); }
+        bool operator>(const node& ot) const{ return num() > ot.num(); }
+        bool operator==(const node& ot) const{ return num() == ot.num(); }
+        bool operator<=(const node& ot) const{ return num() <= ot.num(); }
+        node operator+(const node& ot) const{
+            return {d + ot.d};
+        }
+        operator ll(){ return d; }
+    };
+    node mx(){ return {INF}; }
+    node mn(){ return {0}; }
+
+    using ptl = pair <node, ll>;
+    ll n; vector <node> d;
+    vector <ll> pre;
+    vector <vector<ptl>> adj;
+    priority_queue <ptl, vector<ptl>, greater<ptl>> pq;
+
+    _dij(){}
+    _dij(ll n) { this->n = n; adj.resize(n + 1); }
+
+    void add(ll st, ll en, node c) { // 양방향
+        adj[st].push_back({ c,en });
+        adj[en].push_back({ c,st });
+    }
+    void addsol(ll st, ll en, node c) { // 단방향
+        adj[st].push_back({ c,en });
+    }
+
+    void init(ll st) {
+        d.clear(); pre.clear();
+        d.resize(n + 1, mx()); pre.resize(n + 1, -1); 
+        pq.push({ mn(), st });
+        d[st] = mn();
+
+        while (!pq.empty()) {
+            auto [cn, cur] = pq.top(); pq.pop();
+            if(cn > d[cur]) continue;
+            
+            for (auto& i : adj[cur]) {
+                auto [nn, nxt] = i;
+                node pl = nn + cn;
+        
+                if (d[nxt] <= pl) continue;
+                d[nxt] = pl; pre[nxt] = cur; 
+                pq.push({ pl, nxt });
+            }
+        }
+    }
+
+    node ret(ll n) { return d[n]; }
+};
+
+class _es { // flag (1 == prime / 2 == phi / 4 == mobius)
+public:
+    ll n; vector <ll> pv, pn, mov, phiv;
+    vector <bool> v;
+    _es(ll n, ll flag = 1) {
+        this->n = n;
+
+        if(flag & 1){
+            pv.resize(n + 1, -1); pv[1] = 1;
+            for (ll i = 2;i <= n;i++) {
+                if(pv[i] != -1) continue; pv[i] = i;
+                pn.push_back(i);
+                for (int j = 2 * i; j <= n; j += i) {
+                    if(pv[j] == -1) pv[j] = i;
+                }
+            }
+        }
+
+        if(flag & 2){
+            phiv.resize(n + 1); iota(all(phiv), 0);
+            v.resize(n + 1);
+            for(ll i = 2;i <= n;i++){
+                if(v[i]) continue;
+                for(ll j = i;j <= n;j += i){
+                    phiv[j] /= i; phiv[j] *= (i - 1); v[j] = 1;
+                }
+            }
+        }
+
+        if(flag & 4){
+            mov.resize(n + 1, -2);
+            mov[0] = 0; mov[1] = 1;
+            for(ll i = 2;i <= n;i++){
+                if(mov[i] != -2) continue; mov[i] = -1;
+                for(ll j = 2 * i;j <= n;j += i) {
+                    if(mov[j] == -2) mov[j] = 1;
+                    mov[j] *= -1;
+                }
+                for(ll j = i * i;j <= n; j += i * i) mov[j] = 0;
+            }
+        }
+    }
+
+    ll mp(ll n) { return pv[n]; } // 최소 소인수 반환
+    vector<ll>& ret() { return pn; } // 소수 벡터 반환
+    bool prime(ll n) { // 소수 판별
+        if (n == 1) return 0;
+        return pv[n] == n;
+    }
+    ll mobius(ll n){ return mov[n]; }
+    ll phi(ll n){ return phiv[n]; }
+};
+
+void run(){
+    cin >> a[1].x >> a[1].y >> a[2].x >> a[2].y >> n; _dij dij(n + 2);
+    for(int i = 3;i <= n + 2;i++) cin >> a[i].x >> a[i].y;
+    _es es(30303);
+
+    for(int i = 1;i <= n + 2;i++){
+        for(int j = i + 1;j <= n + 2;j++){
+            ll dx = abs(a[i].x - a[j].x), dy = abs(a[i].y - a[j].y);
+            ll d = sqrtl(dx * dx + dy * dy);
+            if(!es.prime(d)) continue;
+            dij.add(i, j, d);
+        }
+    }
+
+    dij.init(1);
+    ll ret = dij.ret(2);
+    cout << (ret >= INF ? -1 : ret);
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
