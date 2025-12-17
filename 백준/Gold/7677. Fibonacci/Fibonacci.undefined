@@ -16,56 +16,72 @@ constexpr ll MOD = 10000;
 
 class _matrix{ //0-based index
 public:
-    ll n, m, mod;
-    vector <vector<ll>> arr;
+    int n, m; ll mod;
+    vector <ll> arr;
 
     _matrix(){}
-    _matrix(ll n, ll m, ll mod = 998244353){
-        this->n = n; this->m = m; this->mod = mod;
-        arr.resize(n, vector<ll>(m));
-    }
-    void add(ll n, ll m, ll num){ 
-        arr[n][m] += num % mod; 
-        arr[n][m] %= mod;
-    }
-    void update(ll n, ll m, ll num){ arr[n][m] = num % mod; }
+    _matrix(int n, int m, ll mod = 998244353) 
+        : n(n), m(m), mod(mod), arr(1ll * n * m, 0){}
 
-    _matrix operator *(_matrix& ot){
+    ll& at(int i, int j){ return arr[1ll * i * m + j]; }
+    const ll& at(int i, int j) const{ return arr[1ll * i * m + j]; }
+
+    ll norm(ll x) const{
+        x %= mod;
+        return x < 0 ? x + mod : x;
+    }
+    
+    void add(int i, int j, ll v){ at(i, j) = (at(i,j) + norm(v)) % mod; }
+    void set(int i, int j, ll v){ at(i, j) = norm(v); }
+
+    static _matrix id(int n, ll mod){
+        _matrix ret(n, n, mod);
+        for(int i = 0;i < n;i++) ret.at(i, i) = 1 % mod;
+        return ret;
+    }
+
+    _matrix operator*(const _matrix& ot) const{
+        assert(m == ot.n);
         _matrix ret(n, ot.m, mod);
         for(int i = 0;i < n;i++){
             for(int k = 0;k < m;k++){
-                ll now = arr[i][k];
+                ll v = at(i, k);
+                if(!v) continue;
                 for(int j = 0;j < ot.m;j++){
-                    ret.arr[i][j] = (ret.arr[i][j] + now * ot.arr[k][j]) % mod;
+                    i128 mul = (i128)v * ot.at(k, j);
+                    ret.at(i, j) += (ll)(mul % mod);
+                    ret.at(i, j) %= mod;
                 }
             }
         }
         return ret;
     }
 
-    _matrix operator +(_matrix &ot){
+    _matrix operator +(const _matrix &ot) const{
+        assert(n == ot.n && m == ot.m);
         _matrix ret(n, m, mod);
-        for(int i = 0;i < n;i++){
-            for(int j = 0;j < m;j++) ret.arr[i][j] = arr[i][j] + ot.arr[i][j];
+        for(int i = 0;i < n * m;i++){
+            ll v = arr[i] + ot.arr[i];
+            ret.arr[i] = norm(v);
         }
         return ret;
     }
     
-    _matrix pow(_matrix& cur, ll k){ // n * n matrix
-        _matrix ret(n, m, mod);
-        for(int i = 0;i < n;i++) ret.arr[i][i] = 1;
+    _matrix pow(ll k) const{ // n * n matrix
+        assert(n == m);
+        _matrix base = *this;
+        _matrix ret = id(n, mod);
         while(k > 0){
-            if(k & 1) ret = ret * cur;
-            cur = cur * cur;
+            if(k & 1) ret = ret * base;
+            base = base * base;
             k >>= 1ll;
         }
         return ret;
     }
 
-    ll ret(ll n, ll m) { return arr[n][m]; }
-    friend ostream& operator<<(ostream& out, _matrix &cur){
+    friend ostream& operator<<(ostream& out, const _matrix &cur){
         for(int i = 0;i < cur.n;i++){
-            for(int j = 0;j < cur.m;j++) out << cur.arr[i][j] << " ";
+            for(int j = 0;j < cur.m;j++) out << cur.at(i, j) << " ";
             out << "\n";
         }
         return out;
@@ -79,8 +95,8 @@ void run(){
         a.add(0, 0, 1); a.add(0, 1, 1); a.add(1, 0, 1);
         b.add(0, 0, 1);
 
-        a = a.pow(a, n); b = a * b;
-        cout << b.ret(1, 0) << "\n";
+        a = a.pow(n); b = a * b;
+        cout << b.at(1, 0) << "\n";
     }
 }
 
