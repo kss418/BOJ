@@ -15,25 +15,31 @@ constexpr ll MAX = 201010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
 ll a[MAX];
 
-class _es { // flag (1 == prime / 2 == phi / 4 == mobius)
+template <size_t n>
+class _es {
 public:
-    ll n; vector <int> pn;
-    bitset <100000000> v, p;
-    _es(ll n, ll flag = 1) {
-        this->n = n;
-        for (ll i = 2;i <= n;i++) {
-            if(v[i]) continue; v[i] = 1;
-            pn.push_back(i); p[i] = 1;
-            for (int j = 2 * i; j <= n; j += i) v[j] = 1;
+    static constexpr size_t sz = (n >> 1) + 1; 
+    bitset <sz> bs;
+    vector <int> prime;
+    _es() { init(); }
+
+    void init(){
+        if(n >= 2) prime.push_back(2);
+        bs.set(0);
+        for(int i = 3;i <= n;i += 2){
+            if(bs[i >> 1]) continue;
+            prime.push_back(i);
+            for(ll j = 1ll * i * i;j <= (ll)n;j += 2ll * i) bs.set(j >> 1);
         }
     }
 
-    vector<int>& ret() { return pn; } // 소수 벡터 반환
-    bool prime(ll n) { // 소수 판별
-        if (n == 1) return 0;
-        return p[n];
+    const vector<int>& ret() { return prime; } // 소수 벡터 반환
+    bool is_prime(int x) const { // 소수 판별
+        if(x == 2) return 1;
+        if(x < 2 || x % 2 == 0) return 0;
+        return !bs[x >> 1];
     }
-}; _es es(100000000);
+}; _es <100000000> es;
 
 void run(){
     while(cin >> n){
@@ -48,8 +54,8 @@ void run(){
             n -= 5;
         }
 
-        for(auto& i : es.pn){
-            if(!es.prime(n - i)) continue;
+        for(auto& i : es.prime){
+            if(!es.is_prime(n - i)) continue;
             cout << i << " " << n - i << "\n"; break;
         }
     }
