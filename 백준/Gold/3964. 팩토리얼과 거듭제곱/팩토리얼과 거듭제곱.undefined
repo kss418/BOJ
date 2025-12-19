@@ -1,0 +1,169 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX];
+
+class _pr{
+public:
+    using u128 = __uint128_t; mt19937_64 rnd;
+    _pr() : rnd((u64)chrono::steady_clock::now().time_since_epoch().count()){}
+    
+    u64 mul_mod(u64 a, u64 b, u64 mod){ return (u128)a * b % mod; }
+    u64 pow_mod(u64 a, u64 b, u64 mod){
+        u64 ret = 1; a %= mod;
+        while(b){
+            if(b & 1) ret = mul_mod(a, ret, mod);
+            a = mul_mod(a, a, mod);
+            b >>= 1ll;
+        }
+        return ret;
+    }
+
+    bool isprime(u64 n){
+        if(n < 2) return 0;
+        for(u64 i : {2ULL, 3ULL, 5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL}){
+            if(n == i) return 1;
+            if(n % i == 0) return 0;
+        }
+
+        u64 d = n - 1, s = 0;
+        while((d & 1) == 0) d >>= 1ll, ++s;
+
+        auto chk = [&](u64 a) -> bool{
+            if(a % n == 0) return 0;
+            u64 x = pow_mod(a, d, n);
+            if(x == 1 || x == n - 1) return 0;
+            for(u64 r = 1;r < s;r++){
+                x = mul_mod(x, x, n);
+                if(x == n - 1) return 0;
+            }
+            return 1;
+        };
+
+        for (u64 a : {2ULL, 325ULL, 9375ULL, 28178ULL, 450775ULL, 9780504ULL, 1795265022ULL}) {
+            if (chk(a)) return 0;
+        }
+        return 1;
+    }
+
+    u64 f(u64 x, u64 c, u64 mod){ return ((u128)mul_mod(x, x, mod) + c) % mod; }
+    u64 pollard(u64 n){ // 임의의 소인수 반환
+        for(u64 i : {2ULL, 3ULL, 5ULL, 7ULL, 11ULL, 13ULL, 17ULL, 19ULL, 23ULL, 29ULL, 31ULL, 37ULL}){
+            if(n % i == 0) return i;
+        }
+        uniform_int_distribution<u64> rx(2, n - 2), rc(1, n - 1);
+
+        while(1){
+            u64 a = rx(rnd), b = a;
+            u64 c = rc(rnd), g = 1;
+            while(g == 1){
+                a = f(a, c, n);
+                b = f(f(b, c, n), c, n);
+                u64 diff = (a > b) ? (a - b) : (b - a);
+                g = gcd(diff, n);
+            }
+
+            if(g != n) return g;
+        }
+    }
+
+    void dnc(u64 n, vector<u64>& ret){ 
+        if(n == 1) return;
+        if(isprime(n)){
+            ret.push_back(n);
+            return;
+        }
+
+        u64 p = pollard(n);
+        dnc(p, ret); dnc(n / p, ret);
+    }
+
+    vector <u64> factorize(u64 n){ // 소인수분해
+        vector<u64> ret;
+        dnc(n, ret);
+        sort(all(ret));
+        return ret;
+    }
+
+    vector <pair<u64, int>> factorize_cnt(u64 n){
+        auto f = factorize(n);
+        vector<pair<u64, int>> ret;
+        for(u64& p : f){
+            if(ret.empty() || ret.back().x != p) ret.push_back({p, 1});
+            else ret.back().y++;
+        }
+        return ret;
+    }
+
+    u64 phi(u64 n){
+        if(!n) return 0;
+        auto fc = factorize_cnt(n);
+        u128 ret = n;
+        for(auto& [p, c] : fc) ret = ret / p * (p - 1);
+        return (u64)ret;
+    }
+
+    int mobius(u64 x){
+        if(n == 0 || n == 1) return n;
+        auto fc = factorize_cnt(n);
+        for(auto& [p, c] : fc) if(c >= 2) return 0;
+        return fc.size() % 2 ? -1 : 1;
+    }
+
+    u64 divisor_num(u64 n){
+        if(!n) return 0;
+        auto fc = factorize_cnt(n);
+        u128 ret = 1;
+        for(auto& [p, c] : fc) ret *= c + 1;
+        return (u64)ret;
+    }
+
+    u64 divisor_sum(u64 n){
+        if(!n) return 0;
+        auto fc = factorize_cnt(n);
+        u128 ret = 1;
+        for(auto& [p, c] : fc){
+            u128 now = 1, cur = 1;
+            for(int i = 0;i < c;i++){
+                cur *= p;
+                now += cur;
+            }
+            ret *= now;
+        }
+        return (u64)ret;
+    }
+}; _pr pr;
+
+void run(){
+    cin >> n >> m; ll result = INF;
+    for(auto& [p, c] : pr.factorize_cnt(m)){
+        i128 now = 0, cur = p;
+        while(cur <= n){
+            now += n / cur;
+            cur *= p;
+        }
+
+        result = min(result, (ll)now / c);
+    }
+
+    cout << result << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    while(t--) run();
+    
+    return 0;
+}
