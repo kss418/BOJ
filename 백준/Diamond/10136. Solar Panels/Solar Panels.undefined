@@ -1,0 +1,46 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+bool chk(ll a, ll b, ll c, ll d){
+    return a > b && c > d;
+}
+
+void run(){
+    int x1, x2, y1, y2; cin >> x1 >> x2 >> y1 >> y2;
+    int cur = 1, result = -1;
+    while(cur <= min(x2, y2)){
+        int a = x2 / cur, b = (x1 - 1) / cur;
+        int c = y2 / cur, d = (y1 - 1) / cur;
+
+        int nxt = 0x3f3f3f3f;
+        if(a) nxt = min(nxt, x2 / a + 1);
+        if(b) nxt = min(nxt, (x1 - 1) / b + 1);
+        if(c) nxt = min(nxt, y2 / c + 1);
+        if(d) nxt = min(nxt, (y1 - 1) / d + 1);
+
+        if(chk(a, b, c, d)) result = max(result, min({nxt - 1, x2, y2}));
+        cur = nxt;
+    }
+
+    cout << result << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
