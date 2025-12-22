@@ -1,0 +1,47 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll result;
+
+void cal(ll ca, ll cb, ll inter, ll g){
+    result += inter * (n / g + 1) * (m / g + 1);
+    result += (ca - inter) * (n / g + 1) * (m / g);
+    result += (cb - inter) * (n / g) * (m / g + 1);
+    result += (g - ca - cb + inter) * (n / g) * (m / g);
+}
+
+void run(){
+    cin >> n >> m; ll mn = min(n, m), mx = max(n, m);
+    if(mn == 1){ cout << mx << "\n"; return; }
+    ll a = 2 * n - 2, b = 2 * m - 2, g = gcd(a, b); result = 0;
+    
+    ll ca = n % g, cb = m % g, inter = min(ca, cb);
+    cal(ca, cb, inter, g);
+
+    if(!ca || !cb) inter = 0;
+    else inter = max({ca + cb - g - 1, 0ll}) + 1;
+    cal(ca, cb, inter, g);
+    
+    result -= (n / g + (n % g ? 1 : 0)) * (m / g + (m % g ? 1 : 0));
+    result -= (n / g + (g / 2 < ca ? 1 : 0)) * (m / g + (g / 2 < cb ? 1 : 0));
+    cout << result << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
