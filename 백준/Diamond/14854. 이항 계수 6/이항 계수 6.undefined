@@ -1,0 +1,129 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 142857;
+ll a[MAX];
+
+class _comb_crt{ // init -> O(p1^e1 + p2^e2 ...), query -> O(log n + log p)
+public:
+    static ll norm(ll a, ll m){ a %= m; return a < 0 ? a + m : a; }
+    static tll gcd(ll a, ll b){
+        if(!b) return {a, 1, 0};
+        auto [g, x, y] = gcd(b, a % b);
+        return {g, y, x - (a / b) * y};
+    }
+
+    class _comb{ // init -> O(p^e), query -> O(log n + log p)
+    public:
+        ll p, e, mod = 1; 
+        vector <ll> pre;
+        _comb(ll prime, ll exp) : p(prime), e(exp){
+            for(int i = 1;i <= e;i++) mod *= p;
+            pre.assign(mod + 1, 1ll);
+            for(ll i = 1;i <= mod;i++){
+                pre[i] = pre[i - 1];
+                if(i % p) pre[i] = mul(pre[i], i);
+            }
+        }   
+
+        ll mul(ll a, ll b){ return (ll)((i128)norm(a, mod) * norm(b, mod) % mod); }
+        ll pow(ll a, ll b){
+            ll ret = 1; a = norm(a, mod);
+            while(b){
+                if(b & 1) ret = mul(ret, a);
+                a = mul(a, a); b >>= 1ll; 
+            }
+            return ret;
+        }
+
+        ll inv(ll a){
+            auto [g, x, y] = gcd(norm(a, mod), mod);
+            return (g == 1 ? norm(x, mod) : -1);
+        }
+
+        ll vp(ll n){
+            ll ret = 0;
+            while(n){ n /= p; ret += n; }
+            return ret;
+        }
+
+        ll f(ll n){ // p^e = p^k * f(n)
+            if(!n) return 1;
+            ll div = n / mod, rem = n % mod, ret = 1;
+            ret = mul(ret, pow(pre[mod], div));
+            ret = mul(ret, pre[rem]);
+            ret = mul(ret, f(n / p));
+            return ret;
+        }
+
+        ll ret(ll n, ll r){ // O(log n + log p)
+            if(r < 0 || r > n) return 0;
+            ll now = vp(n) - vp(r) - vp(n - r);
+            if(now >= e) return 0;
+
+            ll div = mul(f(r), f(n - r)), in = inv(div);
+            return mul(mul(f(n), in), pow(p, now));
+        }
+    };
+
+    class _crt{
+    public:
+        _crt(){} vector <pll> arr;
+        void clear(){ arr.clear(); }
+        void add(ll a, ll m){ arr.push_back({norm(a, m), m}); }
+
+        pll crt(pll a, pll b){
+            auto[g, cx, cy] = gcd(a.y, b.y);
+            ll lcm = (ll)((i128)a.y / g * b.y), diff = b.x - a.x;
+            if(diff % g) return {-1, -1}; b.y /= g;
+            ll r = norm(diff / g, b.y), l = norm((ll)((i128)cx * r), b.y); 
+            ll ret = norm(a.x + l * a.y, lcm);
+            return { ret, lcm };
+        }
+
+        pll ret(){
+            if(arr.empty()) return {0, 1}; pll cur = arr[0];
+            for(int i = 1;i < arr.size();i++){
+                cur = crt(cur, arr[i]);
+                if(cur.x == -1) return {-1, -1};
+            }
+            return cur;
+        }
+    }; _crt crt;
+
+    vector <_comb> arr; 
+    void add(ll p, ll e) { arr.emplace_back(p, e); }
+    ll ret(ll n, ll r){
+        crt.clear();
+        for(auto& c : arr) crt.add(c.ret(n, r), c.mod);
+        auto [ret, lcm] = crt.ret();
+        return ret;
+    }
+
+    void clear(){ arr.clear(); }
+}; _comb_crt comb;
+
+void run(){
+    cin >> n >> m; 
+    cout << comb.ret(n, m) << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    comb.add(3, 3); comb.add(11, 1);
+    comb.add(13, 1); comb.add(37, 1);
+    while(t--) run(); 
+
+    return 0;
+}
