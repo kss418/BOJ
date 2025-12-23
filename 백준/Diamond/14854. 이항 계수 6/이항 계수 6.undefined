@@ -17,7 +17,17 @@ ll a[MAX];
 
 class _comb_crt{ // init -> O(p1^e1 + p2^e2 ...), query -> O(log n + log p)
 public:
+    static ll mul(ll a, ll b, ll m){ return (ll)((i128)norm(a, m) * norm(b, m) % m); }
     static ll norm(ll a, ll m){ a %= m; return a < 0 ? a + m : a; }
+    static ll pow(ll a, ll b, ll m){
+        ll ret = 1; a = norm(a, m);
+        while(b){
+            if(b & 1) ret *= a % m, ret %= m;
+            a *= a; a %= m; b >>= 1;
+        }      
+        return ret;
+    }
+    
     static tll gcd(ll a, ll b){
         if(!b) return {a, 1, 0};
         auto [g, x, y] = gcd(b, a % b);
@@ -33,19 +43,9 @@ public:
             pre.assign(mod + 1, 1ll);
             for(ll i = 1;i <= mod;i++){
                 pre[i] = pre[i - 1];
-                if(i % p) pre[i] = mul(pre[i], i);
+                if(i % p) pre[i] = mul(pre[i], i, mod);
             }
         }   
-
-        ll mul(ll a, ll b){ return (ll)((i128)norm(a, mod) * norm(b, mod) % mod); }
-        ll pow(ll a, ll b){
-            ll ret = 1; a = norm(a, mod);
-            while(b){
-                if(b & 1) ret = mul(ret, a);
-                a = mul(a, a); b >>= 1ll; 
-            }
-            return ret;
-        }
 
         ll inv(ll a){
             auto [g, x, y] = gcd(norm(a, mod), mod);
@@ -61,9 +61,9 @@ public:
         ll f(ll n){ // p^e = p^k * f(n)
             if(!n) return 1;
             ll div = n / mod, rem = n % mod, ret = 1;
-            ret = mul(ret, pow(pre[mod], div));
-            ret = mul(ret, pre[rem]);
-            ret = mul(ret, f(n / p));
+            ret = mul(ret, pow(pre[mod], div, mod), mod);
+            ret = mul(ret, pre[rem], mod);
+            ret = mul(ret, f(n / p), mod);
             return ret;
         }
 
@@ -72,8 +72,30 @@ public:
             ll now = vp(n) - vp(r) - vp(n - r);
             if(now >= e) return 0;
 
-            ll div = mul(f(r), f(n - r)), in = inv(div);
-            return mul(mul(f(n), in), pow(p, now));
+            ll div = mul(f(r), f(n - r), mod), in = inv(div);
+            return mul(mul(f(n), in, mod), pow(p, now, mod), mod);
+        }
+    };
+
+    class _lucas{ 
+    public:
+        ll mod; vector <ll> fac, inv;
+        _lucas(ll mod) : mod(mod), fac(mod), inv(mod){
+            fac[0] = 1;
+            for(int i = 1;i < mod;i++) fac[i] = mul(fac[i - 1], i, mod);
+            inv[mod - 1] = pow(fac[mod - 1], mod - 2, mod);
+            for(int i = mod - 2;i >= 0;i--) inv[i] = mul(inv[i + 1], i + 1, mod);
+        }
+    
+        ll cal(ll n, ll r){
+            if(n < r) return 0;
+            return fac[n] * inv[r] % mod * inv[n - r] % mod;
+        }
+    
+        ll ret(ll n, ll r){
+            if(n < r || n < 0 || r < 0) return 0;
+            if(!n || !r || n == r) return 1;
+            return cal(n % mod, r % mod) * ret(n / mod, r / mod) % mod;
         }
     };
 
@@ -87,7 +109,7 @@ public:
             auto[g, cx, cy] = gcd(a.y, b.y);
             ll lcm = (ll)((i128)a.y / g * b.y), diff = b.x - a.x;
             if(diff % g) return {-1, -1}; b.y /= g;
-            ll r = norm(diff / g, b.y), l = norm((ll)((i128)cx * r), b.y); 
+            ll r = norm(diff / g, b.y), l = norm((ll)((i128)cx * r % b.y), b.y); 
             ll ret = norm(a.x + l * a.y, lcm);
             return { ret, lcm };
         }
@@ -102,17 +124,23 @@ public:
         }
     }; _crt crt;
 
-    vector <_comb> arr; 
-    void add(ll p, ll e) { arr.emplace_back(p, e); }
-    ll ret(ll n, ll r){
-        crt.clear();
-        for(auto& c : arr) crt.add(c.ret(n, r), c.mod);
-        auto [ret, lcm] = crt.ret();
-        return ret;
+    vector <_comb> c; vector <_lucas> l; 
+    void add(ll p, ll e) { 
+        if(e <= 0) return;
+        if(e == 1) l.emplace_back(p);
+        else c.emplace_back(p, e);
     }
 
-    void clear(){ arr.clear(); }
+    ll ret(ll n, ll r){
+        crt.clear();
+        for(auto& i : c) crt.add(i.ret(n, r), i.mod);
+        for(auto& i : l) crt.add(i.ret(n, r), i.mod);
+        return crt.ret().x;
+    }
+
+    void clear(){ l.clear(); c.clear(); }
 }; _comb_crt comb;
+
 
 void run(){
     cin >> n >> m; 
