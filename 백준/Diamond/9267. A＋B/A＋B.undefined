@@ -1,0 +1,74 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+class _gcd {
+public:
+    _gcd() {}
+
+    using tt = tuple<i128, i128, i128>;
+    tt init(i128 a, i128 b) {
+        if (!b) return { a, 1, 0 };
+        auto [g, x, y] = init(b, a % b);
+        return { g, y, x - a / b * y };
+    }
+
+    i128 ret(i128 a, i128 b) {
+        return get<0>(init(a, b));
+    }
+
+    i128 inv(i128 a, i128 mod) {
+        auto [g, x, y] = init(a, mod);
+        if (!a || g != 1) return -1;
+        return (x < 0 ? x + mod : x);
+    }
+}; _gcd g;
+
+void run(){
+    cin >> n >> m >> k; ll div = gcd(n, m);
+    if(!n && !m){ cout << (k ? "NO" : "YES"); return; }
+    if(k < min(n, m) || k % div){ cout << "NO"; return; }
+    if(k == n || k == m){ cout << "YES"; return; }
+
+    auto[_, x, y] = g.init(n, m);
+    x *= k / div; y *= k / div;
+    n /= div; m /= div;
+
+    if(x <= 0){
+        i128 c = (abs(x) + 1) / m + ((abs(x) + 1) % m ? 1 : 0);
+        x += c * m, y -= c * n;
+    }
+
+    if(x > m){
+        i128 c = (x - 1) / m;
+        x -= c * m, y += c * n;
+    }
+
+    if(x <= 0 || y <= 0){ cout << "NO"; return; }
+    for(int i = 0;i <= (1ll << 16);i++){
+        if(x > 0 && y > 0 && gcd(x, y) == 1){ cout << "YES"; return; }
+        x += m; y -= n;
+        if(y <= 0) break;
+    }
+
+    cout << "NO";
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
