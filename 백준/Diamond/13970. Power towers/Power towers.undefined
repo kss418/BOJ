@@ -252,10 +252,10 @@ public:
     }
 
     ll pow_mod(ll a, ll b, ll p){
-        ll ret = 1 % p; a %= p;
+        i128 ret = 1 % p; a %= p;
         while(b){
-            if(b & 1) ret *= a % p, ret %= p;
-            a *= a; a %= p; b >>= 1;
+            if(b & 1) ret *= (a % p), ret %= p;
+            a = (ll)((i128)a * a % p); b >>= 1;
         }      
         return ret;
     }
@@ -277,13 +277,13 @@ public:
     }
 
     bool tower_le(ll cur, ll num){
-        if((ll)arr.size() - cur >= 4) return 0;
+        if((ll)arr.size() - cur > 4) return 0;
         ll now = arr.back();
         for(int i = (int)arr.size() - 2;i >= cur;i--){
-            if(now >= num) return 0;
-            now = pow_cap(arr[i], now, 100);
+            if(now > num) return 0;
+            now = pow_cap(arr[i], now, num + 1);
         }
-        return now < num;
+        return now <= num;
     }
 
     ll cal(ll cur, ll p, ll mod){
