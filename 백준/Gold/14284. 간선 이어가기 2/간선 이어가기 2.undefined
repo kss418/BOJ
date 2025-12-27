@@ -1,0 +1,121 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX];
+
+struct dij_policy{
+    using dist = ll; using cost = ll;
+    static dist add(const dist& d, const cost& w){ // dist + cost
+        return d + w;
+    }
+    static bool leq(const dist& a, const dist& b){ // dist a <= dist b
+        return a <= b;
+    }
+    static dist inf(){ // ll -> INF, pll -> {INF, INF}, tll -> {INF, INF, INF}
+        return INF;
+    }
+    static dist zero(){ // ll -> 0, pll -> {0, 0}, tll -> {0, 0, 0}
+        return 0;
+    }
+};
+
+template<class policy>
+class _dij {
+private:
+    using dist = typename policy::dist; using cost = typename policy::cost;
+    struct edge{ cost w; int nxt; }; struct node{ dist d; int v; };
+    struct cmp{ bool operator()(const node& a, const node& b) const{ return _dij::less(b.d, a.d); } };
+    vector<vector<edge>> adj; int n; bool built = 0;
+    vector <dist> d; vector<int> pre;
+    priority_queue<node, vector<node>, cmp> pq;
+    void cal(){
+        built = 1;
+        while (!pq.empty()) {
+            auto [cd, cur] = pq.top(); pq.pop();
+            if(!eq(cd, d[cur])) continue;
+            for(const auto& i : adj[cur]) {
+                auto& [w, nxt] = i;
+                dist nd = policy::add(cd, w);
+                if(policy::leq(d[nxt], nd)) continue;
+                d[nxt] = nd; pre[nxt] = cur;
+                pq.push({ nd, nxt });
+            }
+        }
+    }
+
+    void reset(int n){ pre.assign(n + 1, -1); d.assign(n + 1, policy::inf()); }
+    void chk(int x) const{ assert(built); assert(x >= 0 && x <= n); }
+public:
+    _dij(int n = 0){ clear(n); } // O(n)
+    static bool less(const dist& a, const dist& b){ return policy::leq(a, b) && !policy::leq(b, a); }
+    static bool eq(const dist& a, const dist& b){ return policy::leq(a, b) && policy::leq(b, a); }
+
+    void clear(int n = 0){ // O(n + m)
+        this->n = n; adj.assign(n + 1, {}); reset(n);
+        built = 0; while(!pq.empty()) pq.pop();
+    }
+
+    void addsol(int st, int en, cost c){ adj[st].push_back({ c,en }); } // O(1)
+    void add(int st, int en, cost c){ // O(1)
+        adj[st].push_back({ c,en });
+        adj[en].push_back({ c,st });
+    }
+
+    void init(int source){ // O(m log n)
+        reset(n); d[source] = policy::zero();
+        pq.push({ d[source], source }); cal();
+    }
+
+    void init(const vector <int>& source){ // O(m log n)
+        reset(n);
+        for(const auto& i : source){
+            d[i] = policy::zero();
+            pq.push({ d[i], i });
+        } cal();
+    }
+
+    dist ret(int x) const{ // O(1)
+        chk(x);
+        return d[x];
+    }
+
+    vector <int> get_path(int x) const{ // O(n)
+        chk(x);
+        if(eq(d[x], policy::inf())) return {};
+        vector<int> ret;
+        for(int cur = x; cur != -1; cur = pre[cur]) ret.push_back(cur);
+        reverse(all(ret));
+        return ret;
+    }
+}; _dij <dij_policy> dij;
+
+void run(){
+    cin >> n >> m; dij = {n};
+    while(m--){
+        ll s, e, c; cin >> s >> e >> c;
+        dij.add(s, e, c);
+    }
+
+    ll s, e; cin >> s >> e;
+    dij.init(s);
+    cout << dij.ret(e);
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
