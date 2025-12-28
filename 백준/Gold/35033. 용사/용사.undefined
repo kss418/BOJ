@@ -1,0 +1,71 @@
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long; using i128 = __int128_t;
+using tll = tuple<ll, ll, ll>;
+ll t = 1, n, m, k;
+constexpr ll MAX = 201010;
+vector <int> tmp[MAX], adj[MAX], comp[MAX];
+int p[MAX], d[MAX];
+bool v[MAX];
+
+void mktree(int la = 1, int cur = 1, int pre = -1){
+    p[cur] = pre;
+    for(auto& nxt : tmp[cur]){
+        if(pre == nxt) continue;
+        adj[cur].push_back(nxt);
+    }
+
+    if(adj[cur].size() >= 2){
+        if(la != cur) comp[la].push_back(cur);
+        la = cur;
+    }
+
+    for(auto& nxt : adj[cur]) mktree(la, nxt, cur);
+}
+
+void print(int cur, int pre){
+    if(v[cur]) return; v[cur] = 1;
+    for(auto& nxt : adj[cur]) print(nxt, cur);
+    cout << cur << " ";
+
+    while(p[cur] != -1 && p[cur] != pre){
+        cur = p[cur]; 
+        if(v[cur]) return; v[cur] = 1;
+        cout << cur << " ";
+    }
+}
+
+void dfs(int cur = 1, int pre = -1){
+    sort(comp[cur].begin(), comp[cur].end(), [](int a, int b){
+        return d[a] > d[b];
+    });
+
+    for(auto& nxt : comp[cur]) dfs(nxt, cur);
+    print(cur, pre);
+}
+
+int solve(int cur = 1){
+    int& ret = d[cur];
+    if(ret != -1) return ret; ret = 0;
+    for(auto& nxt : comp[cur]) ret = max(ret, solve(nxt) + 1);
+    return ret;
+}
+
+void run(){
+    cin >> n; memset(d, -1, sizeof(d));
+    for(int i = 1;i < n;i++){
+        ll s, e; cin >> s >> e;
+        tmp[s].push_back(e);
+        tmp[e].push_back(s);
+    }
+
+    mktree(); solve(); dfs();
+}
+
+int main(){
+    iostream::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+    // cin >> t; 
+    while(t--) run();
+    return 0;
+}
