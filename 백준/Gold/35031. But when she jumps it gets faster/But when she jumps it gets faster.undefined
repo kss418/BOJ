@@ -1,0 +1,41 @@
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long; using i128 = __int128_t;
+ll t = 1, n, m, k;
+constexpr ll MAX = 1010101;
+ll pre[MAX]; bool a[MAX];
+
+ll cal(ll l, ll r){
+    ll lm = l % m, rm = r % m;
+    if(l / m == r / m) return pre[rm] - (lm ? pre[lm - 1] : 0);
+    ll ret = ((r / m) - (l / m) - 1) * pre[m - 1];
+    ret += pre[m - 1] - (lm ? pre[lm - 1] : 0) + pre[rm];
+    return ret;
+}
+
+void run(){
+    cin >> n >> m >> k;
+    for(int i = 1;i <= k;i++){
+        ll idx; cin >> idx;
+        a[idx - 1] = 1;
+    }
+    
+    pre[0] = a[0];
+    for(int i = 1;i < MAX;i++) pre[i] = pre[i - 1] + a[i];
+
+    ll sp = 1, x = 0, result = 0;
+    while(x < n * m){
+        ll pl = cal(x, x + sp - 1);
+        x += sp; sp += pl; result++;
+    }
+
+    cout << result;
+}
+
+int main(){
+    iostream::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+    // cin >> t; 
+    while(t--) run();
+    return 0;
+}
