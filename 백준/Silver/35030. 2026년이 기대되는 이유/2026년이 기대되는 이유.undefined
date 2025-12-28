@@ -1,0 +1,49 @@
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long;
+ll t = 1, n, m, k;
+constexpr ll MAX = 101010;
+int prime[MAX], pre[MAX];
+
+void init(){
+    memset(prime, -1, sizeof(prime)); prime[1] = 0;
+    for(int i = 2;i < MAX;i++){
+        if(prime[i] != -1) continue;
+        prime[i] = 1;
+        for(int j = 2 * i;j < MAX;j += i) prime[j] = 0;
+    }
+
+    for(int i = 1;i < MAX - 1;i++){
+        if(!prime[i + 1]){
+            pre[i] = pre[i - 1];
+            continue;
+        }
+
+        bool flag = 1;
+        string st = to_string(i);
+        for(int j = 0;j < (int)st.size() - 1;j++){
+            string a = st.substr(0, j + 1);
+            string b = st.substr(j + 1, st.size() - j - 1);
+            ll mul = stoll(a) * stoll(b);
+            if(prime[mul + 1]) continue; flag = 0;
+            pre[i] = pre[i - 1];
+        }
+
+        if(!flag) continue;
+        pre[i] = pre[i - 1] + 1;
+    }   
+}
+
+void run(){
+    cin >> n;
+    cout << pre[n] << "\n";
+}
+
+int main(){
+    cin.sync_with_stdio(0);
+    cout.sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+    cin >> t; init();
+    while(t--) run();
+    return 0;
+}
