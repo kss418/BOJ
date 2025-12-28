@@ -13,10 +13,9 @@ constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 201010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
-ll a[MAX];
 
 struct dij_policy{
-    using dist = ll; using cost = ll;
+    using dist = int; using cost = int;
     static dist add(const dist& d, const cost& w){ // dist + cost
         return d + w;
     }
@@ -93,7 +92,7 @@ public:
 void run(){
     cin >> n >> m >> k; dij = {n};
     while(m--){
-        ll s, e, c; cin >> s >> e >> c;
+        int s, e, c; cin >> s >> e >> c;
         dij.addsol(s, e, c);
     }
 
