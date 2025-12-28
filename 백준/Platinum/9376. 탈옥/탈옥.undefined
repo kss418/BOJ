@@ -1,0 +1,163 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+string st[MAX];
+
+struct dij_policy{
+    using dist = int; using cost = int;
+    static dist add(const dist& d, const cost& w){ // dist + cost
+        return d + w;
+    }
+    static bool leq(const dist& a, const dist& b){ // dist a <= dist b
+        return a <= b;
+    }
+    static dist inf(){ // ll -> INF, pll -> {INF, INF}, tll -> {INF, INF, INF}
+        return 0x3f3f3f3f;
+    }
+    static dist zero(){ // ll -> 0, pll -> {0, 0}, tll -> {0, 0, 0}
+        return 0;
+    }
+};
+
+template<class policy>
+class _dij {
+private:
+    using dist = typename policy::dist; using cost = typename policy::cost;
+    struct edge{ cost w; int nxt; }; struct node{ dist d; int v; };
+    struct cmp{ bool operator()(const node& a, const node& b) const{ return _dij::less(b.d, a.d); } };
+    vector<vector<edge>> adj; int n; bool built = 0;
+    vector <dist> d; vector<int> pre;
+    priority_queue<node, vector<node>, cmp> pq;
+    void cal(){
+        built = 1;
+        while (!pq.empty()) {
+            auto [cd, cur] = pq.top(); pq.pop();
+            if(!eq(cd, d[cur])) continue;
+            for(const auto& i : adj[cur]) {
+                auto& [w, nxt] = i;
+                dist nd = policy::add(cd, w);
+                if(policy::leq(d[nxt], nd)) continue;
+                d[nxt] = nd; pre[nxt] = cur;
+                pq.push({ nd, nxt });
+            }
+        }
+    }
+
+    void reset(int n){ pre.assign(n + 1, -1); d.assign(n + 1, policy::inf()); }
+    void chk(int x) const{ assert(built); assert(x >= 0 && x <= n); }
+public:
+    _dij(int n = 0){ clear(n); } // O(n)
+    static bool less(const dist& a, const dist& b){ return policy::leq(a, b) && !policy::leq(b, a); }
+    static bool eq(const dist& a, const dist& b){ return policy::leq(a, b) && policy::leq(b, a); }
+
+    void clear(int n = 0){ // O(n + m)
+        this->n = n; adj.assign(n + 1, {}); reset(n);
+        built = 0; while(!pq.empty()) pq.pop();
+    }
+
+    void addsol(int st, int en, cost c){ adj[st].push_back({ c,en }); } // O(1)
+    void add(int st, int en, cost c){ // O(1)
+        adj[st].push_back({ c,en });
+        adj[en].push_back({ c,st });
+    }
+
+    void init(int source){ // O(m log n)
+        reset(n); d[source] = policy::zero();
+        pq.push({ d[source], source }); cal();
+    }
+
+    void init(const vector <int>& source){ // O(m log n)
+        reset(n);
+        for(const auto& i : source){
+            d[i] = policy::zero();
+            pq.push({ d[i], i });
+        } cal();
+    }
+
+    dist ret(int x) const{ // O(1)
+        chk(x);
+        return d[x];
+    }
+
+    bool reachable(int x) const{ // O(1)
+        chk(x);
+        return !eq(d[x], policy::inf());
+    }
+
+    vector <int> get_path(int x) const{ // O(n)
+        chk(x);
+        if(eq(d[x], policy::inf())) return {};
+        vector<int> ret;
+        for(int cur = x; cur != -1; cur = pre[cur]) ret.push_back(cur);
+        // reverse(all(ret));
+        return ret;
+    }
+}; 
+
+int num(int cy, int cx){
+    return cy * m + cx;
+}
+
+int dy[4] = {0, 0, 1, -1}, dx[4] = {1, -1, 0, 0};
+bool outrange(int cy, int cx){
+    return cy < 0 || cx < 0 || cy >= n || cx >= m;
+}
+
+int sum[MAX * MAX];
+void run(){
+    cin >> n >> m; _dij <dij_policy> dij(n * m);
+    vector <ll> arr; memset(sum, 0, sizeof(sum));
+    for(int i = 0;i < n;i++) cin >> st[i];
+
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            if(st[i][j] == '*') continue;
+            if(st[i][j] == '$') arr.push_back(num(i, j));
+            int cur = num(i, j);
+
+            for(int k = 0;k < 4;k++){
+                int ny = i + dy[k], nx = j + dx[k];
+                if(outrange(ny, nx)){
+                    dij.addsol(cur, n * m, st[i][j] == '#');
+                    dij.addsol(n * m, cur, 0);
+                }
+                else{
+                    if(st[ny][nx] == '*') continue;
+                    dij.addsol(cur, num(ny, nx), st[i][j] == '#');
+                }
+            }
+        }
+    }
+
+    int result = 0x3f3f3f3f;
+    for(auto& v : {arr[0], arr[1], n * m}){
+        dij.init(v);
+        for(int i = 0;i <= n * m;i++){
+            if(!dij.reachable(i) || sum[i] == 0x3f3f3f3f) sum[i] = 0x3f3f3f3f;
+            else sum[i] += dij.ret(i);
+        }
+    }
+    
+    for(int i = 0;i < n * m;i++) result = min(result, sum[i] + (st[i / m][i % m] == '#'));
+    result = min(result, sum[n * m]);
+    cout << result << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
