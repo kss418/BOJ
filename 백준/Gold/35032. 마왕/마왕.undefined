@@ -1,0 +1,56 @@
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long; using i128 = __int128_t;
+using tll = tuple<ll, ll, ll>;
+ll t = 1, n, m, k;
+constexpr ll MAX = 2010;
+
+struct node{ ll x, y, r; };
+node arr[MAX];
+vector <int> adj[MAX], result;
+vector <pair <ll, int>> num;
+bool v[MAX];
+
+bool inter(int i, int j){
+    int dx = abs(arr[i].x - arr[j].x);
+    int dy = abs(arr[i].y - arr[j].y);
+    int dist = arr[i].r + arr[j].r;
+    return dx < dist & dy < dist;
+}
+
+void run(){
+    cin >> n;
+    for(int i = 1;i <= n;i++){
+        cin >> arr[i].x >> arr[i].y >> arr[i].r;
+    }
+
+    for(int i = 1;i <= n;i++){
+        ll co = arr[i].r * arr[i].r;
+        for(int j = 1;j <= n;j++){
+            if(!inter(i, j) || i == j) continue;
+            adj[i].push_back(j);
+            co -= arr[j].r * arr[j].r;
+        }
+
+        num.push_back({co, i});
+    }
+
+    sort(num.begin(), num.end());
+    reverse(num.begin(), num.end());
+    for(auto& [co, idx] : num){
+        if(v[idx]) continue; v[idx] = 1;
+        result.push_back(idx);
+        for(auto& i : adj[idx]) v[i] = 1;
+    }
+
+    cout << result.size() << "\n";
+    for(auto& i : result) cout << i << "\n";
+}
+
+int main(){
+    iostream::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+    // cin >> t; 
+    while(t--) run();
+    return 0;
+}
