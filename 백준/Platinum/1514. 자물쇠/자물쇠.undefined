@@ -1,0 +1,202 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+string s1, s2;
+bool v[MAX];
+
+struct sp_policy{
+    using dist = int; using cost = int;
+    static dist add(const dist& d, const cost& w){ // dist + cost
+        return d + w;
+    }
+    static bool leq(const dist& a, const dist& b){ // dist a <= dist b
+        return a <= b;
+    }
+    static dist inf(){ // ll -> INF, pll -> {INF, INF}, tll -> {INF, INF, INF}
+        return 0x3f3f3f3f;
+    }
+    static dist zero(){ // ll -> 0, pll -> {0, 0}, tll -> {0, 0, 0}
+        return 0;
+    }
+};
+
+template<class policy = sp_policy>
+class _dij {
+private:
+    using dist = typename policy::dist; using cost = typename policy::cost;
+    struct edge{ cost w; int nxt; }; struct node{ dist d; int v; };
+    struct cmp{ bool operator()(const node& a, const node& b) const{ return _dij::less(b.d, a.d); } };
+    vector<vector<edge>> adj; int n; bool built = 0;
+    vector <dist> d; vector<int> pre;
+    priority_queue<node, vector<node>, cmp> pq;
+    void cal(){
+        built = 1;
+        while (!pq.empty()) {
+            auto [cd, cur] = pq.top(); pq.pop();
+            if(!eq(cd, d[cur])) continue;
+            for(const auto& i : adj[cur]) {
+                auto& [w, nxt] = i;
+                dist nd = policy::add(cd, w);
+                if(policy::leq(d[nxt], nd)) continue;
+                d[nxt] = nd; pre[nxt] = cur;
+                pq.push({ nd, nxt });
+            }
+        }
+    }
+
+    void reset(int n){ pre.assign(n + 1, -1); d.assign(n + 1, policy::inf()); }
+    void chk(int x) const{ assert(built); assert(x >= 0 && x <= n); }
+public:
+    static bool less(const dist& a, const dist& b){ return policy::leq(a, b) && !policy::leq(b, a); }
+    static bool eq(const dist& a, const dist& b){ return policy::leq(a, b) && policy::leq(b, a); }
+
+    _dij(int n = 0){ clear(n); } // O(n)
+    void clear(int n){ // O(n + m)
+        this->n = n; adj.assign(n + 1, {}); reset(n);
+        built = 0; while(!pq.empty()) pq.pop();
+    }
+
+    void addsol(int st, int en, cost c){ // O(1)
+        built = 0;
+        adj[st].push_back({ c,en });
+    }
+    void add(int st, int en, cost c){ // O(1)
+        addsol(st, en, c); addsol(en, st, c);
+    }
+
+    void init(int source){ // O((n + m) log n)
+        reset(n); d[source] = policy::zero();
+        pq.push({ d[source], source }); cal();
+    }
+
+    void init(const vector <int>& source){ // O((n + m) log n)
+        reset(n);
+        for(const auto& i : source){
+            d[i] = policy::zero();
+            pq.push({ d[i], i });
+        } cal();
+    }
+
+    dist ret(int x) const{ // O(1)
+        chk(x);
+        return d[x];
+    }
+
+    bool reachable(int x) const{ // O(1)
+        chk(x);
+        return !eq(d[x], policy::inf());
+    }
+
+    vector <int> get_path(int x) const{ // O(n)
+        chk(x); assert(reachable(x));
+        vector<int> ret;
+        for(int cur = x; cur != -1; cur = pre[cur]) ret.push_back(cur);
+        reverse(all(ret));
+        return ret;
+    }
+}; _dij dij;
+
+void norm(int& a){
+    if(a < 10) a += 10;
+    if(a >= 10) a -= 10;
+}
+void norm(int& a, int& b, int& c){
+    norm(a); norm(b); norm(c);
+}
+
+int num(int cur, int a, int b, int c){
+    norm(a, b, c);
+    return cur * 1000 + a * 100 + b * 10 + c;
+}   
+
+vector <int> it(int i, int a, int b, int c){
+    vector <int> ret;
+    for(int pl = 1;pl <= 3;pl++){
+        for(auto& mul : {-1, 1}){
+            int now = pl * mul;
+            ret.push_back(num(i, a + now, b, c));
+            ret.push_back(num(i, a, b + now, c));
+            ret.push_back(num(i, a, b, c + now));
+            ret.push_back(num(i, a + now, b + now, c));
+            ret.push_back(num(i, a, b + now, c + now));
+            ret.push_back(num(i, a + now, b + now, c + now));
+        }
+    }
+    return ret;
+}
+
+void init(int cur, int a, int b, int c, int pre = -1, int co = -1){
+    norm(a, b, c); int now = num(cur, a, b, c);
+    if(pre != -1) dij.addsol(pre, now, co);
+    if(v[now]) return; v[now] = 1;
+    if(!cur && s1[0] - '0' == a && s1[1] - '0' == b && s1[2] - '0' == c) return;
+    if(cur + 2 > n - 1 || c == s1[cur + 2] - '0'){
+        if(cur) init(cur - 1, s2[cur - 1] - '0', a, b, now, 0);
+    }
+
+    for(int i = 1;i <= 3;i++){
+        for(auto& j : {-1, 1}){
+            init(cur, a + i * j, b, c, now, 1);
+            init(cur, a + i * j, b + i * j, c, now, 1);
+            init(cur, a + i * j, b + i * j, c + i * j, now, 1);
+            init(cur, a, b + i * j, c, now, 1);
+            init(cur, a, b + i * j, c + i * j, now, 1);
+            init(cur, a, b, c + i * j, now, 1);
+        }
+    }
+}
+
+void cal(){
+    for(int i = 0;i < s1.size();i++){
+        for(int a = 0;a <= 9;a++){
+            for(int b = 0;b <= 9;b++){
+                for(int c = 0;c <= 9;c++){
+                    int cur = num(i, a, b, c);
+                    for(auto& nxt : it(i, a, b, c)) dij.add(cur, nxt, 1);
+                }
+            }
+        }
+    }
+
+    for(int i = 1;i < s1.size();i++){
+        for(int a = 0;a <= 9;a++){
+            for(int b = 0;b <= 9;b++){
+                for(int c = 0;c <= 9;c++){
+                    if(i + 2 >= s1.size() || c == s1[i + 2] - '0'){
+                        int cur = num(i, a, b, c), nxt = num(i - 1, s2[i - 1] - '0', a, b);
+                        dij.add(cur, nxt, 0);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void run(){
+    cin >> n >> s1 >> s2; dij = {MAX};
+    while(s1.size() < 3) s1.push_back('0');
+    while(s2.size() < 3) s2.push_back('0');
+
+    cal();
+    dij.init(num(s1.size() - 1, s2.back() - '0', 0, 0));
+    cout << dij.ret(num(0, s1[0] - '0', s1[1] - '0', s1[2] - '0'));
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
