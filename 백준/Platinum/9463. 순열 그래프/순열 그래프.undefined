@@ -13,12 +13,12 @@ constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 101010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
-ll a[MAX], org[MAX];
+int a[MAX], org[MAX];
 
 struct fw_policy{
     struct node{
-        ll v;
-        node(ll v) : v(v){}
+        int v;
+        node(int v) : v(v){}
         node() : node(0){} // identity
     };
     static node op(const node& l, const node& r){
@@ -79,19 +79,19 @@ public:
         if(idx <= 0 || idx > n) return;
         for(int i = idx;i <= n;i += i & -i) bit[i] = op(bit[i], v);
     }
-};
+}; _fw fw;
 
 void run(){
-    cin >> n; _fw fw(n);
+    cin >> n; fw = {n};
     for(int i = 1;i <= n;i++) cin >> a[i];
     for(int i = 1;i <= n;i++){
-        ll v; cin >> v;
+        int v; cin >> v;
         org[v] = i;
     }
 
     ll result = 0;
     for(int i = 1;i <= n;i++){
-        ll now = org[a[i]];
+        int now = org[a[i]];
         result += fw.query(now + 1, n).v;
         fw.update(now, 1);
     }
