@@ -1,0 +1,110 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010101; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX]; bool ban[MAX];
+
+struct mst_policy{
+    using cost = ll;
+    static cost zero(){ return 0; }
+    static cost add(const cost& a, const cost& b){ return a + b; }
+};
+
+template <class policy = mst_policy>
+class _mst{
+private:
+    using cost = typename policy::cost;
+    cost zero() const{ return policy::zero(); }
+    cost add(const cost& a, const cost& b) const{ return policy::add(a, b); }
+    cost result = zero(); int n; bool built = 0;
+    class edge{
+    public:
+        int s, e; cost c;
+        bool operator<(const edge& ot) const{ return c < ot.c; }
+    };
+    class _uf{
+    private:
+        vector <int> p, sz; int n;
+    public:
+        _uf(int n = 0){ clear(n); } // O(n)
+        void clear(int n){ this->n = n; p.assign(n + 1, -1); sz.assign(n + 1, 1); }  // O(n)
+        int find(int x){ // O(1)
+            if(p[x] == -1) return x;
+            return p[x] = find(p[x]);
+        }
+
+        bool merge(int a, int b){ // O(1) 
+            a = find(a); b = find(b);
+            if(a == b) return false;
+            if(sz[a] < sz[b]) swap(a, b);
+            p[b] = a; sz[a] += sz[b];
+            return true;
+        }
+    }; _uf uf; vector<edge> adj;
+
+    bool cal(int num = 0){ 
+        assert(!built); built = 1;
+        sort(all(adj)); int cnt = 0;
+        for(auto& i : adj){
+            auto& [st, en, c] = i;
+            if(cnt >= n - num - 1) return 1;
+            if(!uf.merge(st, en)) continue;
+            result = add(result, c); cnt++;
+        }
+        return cnt >= n - num - 1;
+    }
+public:
+    _mst(int n = 0){ clear(n); }
+    void clear(int n){ 
+        this->n = n; result = zero(); 
+        uf.clear(n); built = 0; adj.clear();
+    }
+
+    void add(int st, int en, cost c){
+        assert(!built);
+        adj.push_back({st, en, c}); 
+    }
+
+    bool init(int num = 0){ return cal(num);}
+    cost ret(){ 
+        assert(built);
+        return result; 
+    }
+};
+
+void run(){
+    cin >> n >> m >> k; _mst mst(n + 1);
+    for(int i = 1;i <= n;i++) cin >> a[i], mst.add(i, n + 1, a[i]);
+    for(int i = 1;i <= m;i++){
+        ll s, e; cin >> s >> e;
+        if(abs(e - s) == 1) ban[min(s, e)] = 1;
+        else ban[n] = 1;
+    }
+
+    for(int i = 1;i <= n;i++){
+        if(ban[i]) continue;
+        mst.add(i, i % n + 1, 0);
+    }
+
+    if(m <= 1){ cout << "YES"; return; }
+    if(!mst.init()){ cout << "NO"; return; }
+    cout << (mst.ret() <= k ? "YES" : "NO");    
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
