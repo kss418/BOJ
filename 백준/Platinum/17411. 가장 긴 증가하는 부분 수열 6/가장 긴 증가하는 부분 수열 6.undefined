@@ -14,18 +14,6 @@ constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 1010101; // SET MAX SIZE
 constexpr ll MOD = 1e9 + 7;
 
-struct seg_policy{
-    struct node {
-        ll v;
-        node(ll v) : v(v){}
-        node() : node(0){} // identity
-    };
-
-    static node op(const node& l, const node& r){
-        return {max(l.v, r.v)};
-    }
-};
-
 struct fw_policy{
     struct node{
         ll v;
@@ -34,6 +22,20 @@ struct fw_policy{
     };
     static node op(const node& l, const node& r){
         return {(l.v + r.v) % MOD};
+    }
+    static node inv(const node& a){
+        return {-a.v};
+    }
+};
+
+struct mxp{
+    struct node{
+        ll v;
+        node(ll v) : v(v){}
+        node() : node(0){} // identity
+    };
+    static node op(const node& l, const node& r){
+        return {max(l.v, r.v)};
     }
     static node inv(const node& a){
         return {-a.v};
@@ -92,53 +94,6 @@ public:
     }
 };
 
-template <class policy = seg_policy>
-class _seg {
-private:
-    using node = typename policy::node;
-    int n, sz; vector <node> seg;
-    node op(const node& l, const node& r) const{ return policy::op(l, r); }
-    node id() const{ return node(); }
-public:
-    _seg(int n = 0){ clear(n); } // O(n)
-    void clear(int n){ // O(n)
-        this->n = n;
-        sz = 1; while(sz < n + 1) sz <<= 1;
-        seg.assign(2 * sz, id());
-    }
-    void build(const vector<node>& arr){ // O(n)
-        if(arr.empty()){ clear(0); return; }
-        clear((int)arr.size() - 1);
-        for(int i = 0;i < (int)arr.size();i++) seg[i + sz] = arr[i];
-        for(int i = sz - 1;i >= 1;i--) seg[i] = op(seg[i << 1], seg[i << 1 | 1]);
-    }
-
-    node query(int st, int en){ // O(log n)
-        st = max(0, st); en = min(n, en);
-        if(st > en) return id();
-        node l = id(), r = id();
-        st += sz; en += sz;
-        while(st <= en){
-            if(st & 1) l = op(l, seg[st++]);
-            if(!(en & 1)) r = op(seg[en--], r);
-            st >>= 1; en >>= 1;
-        }
-        return op(l, r);
-    }
-
-    void set(int idx, const node& v){ // O(log n)
-        if(idx < 0 || idx > n) return;
-        int p = idx + sz; seg[p] = v;
-        for(p >>= 1; p; p >>= 1) seg[p] = op(seg[p << 1], seg[p << 1 | 1]);
-    }
-
-    void update(int idx, const node& v){ // O(log n)
-        if(idx < 0 || idx > n) return;
-        int p = idx + sz; seg[p] = op(seg[p], v);
-        for(p >>= 1; p; p >>= 1) seg[p] = op(seg[p << 1], seg[p << 1 | 1]);
-    }
-};
-
 ll a[MAX], len[MAX]; vector <ll> num, idx[MAX];
 unordered_map <ll, ll> mp;
 void comp(){
@@ -148,13 +103,13 @@ void comp(){
 }
 
 void run(){
-    cin >> n; _seg seg(n);
+    cin >> n; _fw <mxp> seg(n);
     for(int i = 1;i <= n;i++) cin >> a[i], num.push_back(a[i]);
     comp(); ll mx = 0, cnt = 0;
     
     for(int i = 1;i <= n;i++){
         a[i] = mp[a[i]];
-        len[i] = seg.query(1, a[i] - 1).v + 1;
+        len[i] = seg.pre(a[i] - 1).v + 1;
         seg.update(a[i], len[i]);
         mx = max(mx, len[i]);
         idx[len[i]].push_back(i);
