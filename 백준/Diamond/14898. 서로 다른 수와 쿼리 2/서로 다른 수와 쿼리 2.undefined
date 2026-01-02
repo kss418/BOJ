@@ -1,0 +1,128 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010101; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+ll a[MAX];
+
+struct seg_policy{
+    struct node {
+        int v;
+        node(int v) : v(v){}
+        node() : node(0){} // identity
+    };
+
+    static node op(const node& l, const node& r){
+        return {
+            l.v + r.v
+        };
+    }
+};
+
+template <class policy = seg_policy>
+class _pst{
+public:
+    using node = typename policy::node;
+    node op(const node& l, const node& r) const{ return policy::op(l, r); }
+    node id() const{ return node(); }
+private:
+    vector <int> lv, rv, root;
+    vector <node> seg;
+    int n, q, lg, nc, vc;
+    int clone(int idx){
+        ++nc; seg[nc] = seg[idx];
+        lv[nc] = lv[idx]; rv[nc] = rv[idx];
+        return nc;
+    }
+
+    int set(int idx, int s, int e, int pos, const node& v){
+        int cur = clone(idx);
+        if(s == e){
+            seg[cur] = v;
+            return cur;
+        }
+        int m = (s + e) >> 1;
+        if(pos <= m) lv[cur] = set(lv[cur], s, m, pos, v);
+        else rv[cur] = set(rv[cur], m + 1, e, pos, v);
+        seg[cur] = op(seg[lv[cur]], seg[rv[cur]]);
+        return cur;
+    }
+
+    node query(int idx, int s, int e, int l, int r) const{
+        if(!idx) return id();
+        if(r < s || e < l) return id();
+        if(l <= s && r >= e) return seg[idx];
+
+        int m = (s + e) >> 1;
+        node ln = query(lv[idx], s, m, l, r);
+        node rn = query(rv[idx], m + 1, e, l, r);
+        return op(ln, rn);
+    }
+public:
+    _pst(int n = 0, int q = 0){ clear(n, q); } // q -> update size
+    void clear(int n, int q){ // O(q log n)
+        this->n = n; this->q = q;
+        lg = __lg(n + 1) + 2; nc = vc = 0;
+        int mx = (q + 1) * lg + 5;
+        lv.assign(mx, 0); rv.assign(mx, 0);
+        root.assign(q + 1, 0); seg.assign(mx, id());
+    }
+
+    int set(int idx, const node& v){ return set(vc, idx, v); } // O(log n)
+    int set(int ver, int idx, const node& v){ // O(log n)
+        assert(0 <= ver && ver <= vc);
+        assert(vc + 1 <= q); assert(0 <= idx && idx <= n);
+        root[++vc] = set(root[ver], 0, n, idx, v);
+        return vc;
+    }
+
+    node query(int ver, int idx) const{ return query(ver, idx, idx); } // O(log n)
+    node query(int ver, int l, int r) const{ // O(log n)
+        assert(0 <= ver && ver <= vc);
+        l = max(0, l); r = min(n, r);
+        if(l > r) return id();
+        return query(root[ver], 0, n, l, r);
+    }
+};
+
+vector <int> arr;
+unordered_map <int, int> mp;
+int la[MAX], root[MAX];
+void run(){
+    cin >> n; _pst pst(n, 2 * n);
+    for(int i = 1;i <= n;i++) cin >> a[i], arr.push_back(a[i]);
+    sort(all(arr)); arr.erase(unique(all(arr)), arr.end());
+
+    for(int i = 0;i < arr.size();i++) mp[arr[i]] = i + 1;
+    for(int i = 1;i <= n;i++){
+        a[i] = mp[a[i]];
+        if(la[a[i]]) pst.set(la[a[i]], 0);
+        root[i] = pst.set(i, 1);
+        la[a[i]] = i;
+    }
+
+    cin >> m; int ret = 0;
+    while(m--){
+        int x, r; cin >> x >> r;
+        int l = x + ret;
+        ret = pst.query(root[r], l, r).v;
+        cout << ret << "\n";
+    }
+}   
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
