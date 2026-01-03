@@ -1,0 +1,119 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+constexpr ll MID = 100100;
+int num[2 * MAX], cnt[MAX];
+
+struct mos_policy{
+    struct node{
+        int v;
+        node(int v = 0) : v(v){}
+    };
+    struct ret{
+        int v;
+        ret(int v = 0) : v(v){}
+    };
+    static void push_front(int idx, const node& v, ret& now){
+        ll cur = num[v.v + MID]; cnt[cur]--;
+        num[v.v + MID]++; cnt[cur + 1]++;
+        if(now.v == cur) now.v++;
+    }
+    static void push_back(int idx, const node& v, ret& now){
+        push_front(idx, v, now);
+    }
+    static void pop_front(int idx, const node& v, ret& now){
+        ll cur = num[v.v + MID]; cnt[cur]--;
+        num[v.v + MID]--; cnt[cur - 1]++;
+        if(now.v == cur && !cnt[cur]) now.v--;
+    }
+    static void pop_back(int idx, const node& v, ret& now){
+        pop_front(idx, v, now);
+    }
+};
+
+template <class policy = mos_policy>
+class _mos{
+public:
+    using node = typename policy::node;
+    using ret  = typename policy::ret;
+private:
+    int n, b;
+    static void push_front(int idx, const node& v, ret& now){ policy::push_front(idx, v, now); }
+    static void push_back(int idx, const node& v, ret& now){ policy::push_back(idx, v, now); }
+    static void pop_front(int idx, const node& v, ret& now){ policy::pop_front(idx, v, now); }
+    static void pop_back(int idx, const node& v, ret& now){ policy::pop_back(idx, v, now); }
+    static node node_id(){ return node(); }
+    static ret ret_id(){ return ret();  }
+    struct query{ int l, r, idx; };
+    struct cmp {
+        int b;
+        bool operator()(const query& a, const query& c) const {
+            int ab = a.l / b, cb = c.l / b;
+            return (ab != cb ? ab < cb : a.r < c.r);
+        }
+    };
+public:
+    vector <ret> result; vector <node> arr; vector <query> vq;
+    _mos(int n = 0, int b = 0){ clear(n, b); } // O(n)
+    void clear(int n, int b = 0){ // O(n)
+        this->n = n; this->b = b;
+        if(!b) this->b = sqrt(n); vq.clear();
+        arr.assign(n + 1, node_id());
+    }
+
+    const vector<ret>& get_result() const{ return result; } // O(1)
+    void add(int l, int r, int idx){ vq.push_back({l, r, idx}); } // O(1)
+    void set(int idx, const node& v){ arr[idx] = v; } // O(1)
+    void build(){ // O(q log q + (n^2 / b + qb) * update)
+        if (vq.empty()) { result.clear(); return; } 
+        sort(all(vq), cmp{b}); result.assign(vq.size(), ret_id());
+        int s = vq[0].l, e = s - 1; ret cur = ret_id();
+        while(e < vq[0].r){ ++e; push_back(e, arr[e], cur); }
+        while(s > vq[0].l){ --s; push_front(s, arr[s], cur); }
+        while(s < vq[0].l){ pop_front(s, arr[s], cur); ++s; }
+        result[vq[0].idx] = cur;
+        for(int i = 1;i < (int)vq.size();i++){
+            auto&[l, r, idx] = vq[i];
+            while(l > s){ pop_front(s, arr[s], cur); ++s; }
+            while(r < e){ pop_back(e, arr[e], cur); --e; }
+            while(l < s){ --s; push_front(s, arr[s], cur); }
+            while(r > e){ ++e; push_back(e, arr[e], cur); }
+            result[idx] = cur;
+        }
+    }
+};
+
+void run(){
+    cin >> n >> m; _mos mos(n); cnt[0] = n;
+    for(int i = 1;i <= n;i++){
+        int v; cin >> v;
+        mos.set(i, v);
+    }
+
+    for(int i = 0;i < m;i++){
+        int l, r; cin >> l >> r;
+        mos.add(l, r, i);
+    }
+
+    mos.build();
+    for(const auto&[v] : mos.get_result()) cout << v << "\n";
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
