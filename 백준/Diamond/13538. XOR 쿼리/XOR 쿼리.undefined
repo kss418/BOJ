@@ -1,0 +1,235 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 501010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+template <class policy>
+concept has_inv = requires(const typename policy::node& a){
+    { policy::inv(a) } -> std::same_as<typename policy::node>;
+};
+
+struct group{
+    struct node{
+        ll v;
+        node(ll v = 0) : v(v){}
+    };
+    static node op(const node& l, const node& r){
+        return {l.v + r.v};
+    }
+    static node inv(const node& a){
+        return {-a.v};
+    }
+};
+
+template <class policy = group>
+class _pst{
+public:
+    using node = typename policy::node;
+    node op(const node& l, const node& r) const{ return policy::op(l, r); }
+    node id() const{ return node(); }
+    node inv(const node& a) const requires has_inv<policy>{ return policy::inv(a); }
+private:
+    vector <int> lv, rv, root; vector <node> seg;
+    int n, q, lg, nc, vc;
+    int clone(int idx){
+        ++nc; seg[nc] = seg[idx];
+        lv[nc] = lv[idx]; rv[nc] = rv[idx];
+        return nc;
+    }
+
+    int set(int idx, int s, int e, int pos, const node& v){
+        int cur = clone(idx);
+        if(s == e){ seg[cur].v += v.v; return cur; }
+        int m = (s + e) >> 1;
+        if(pos <= m) lv[cur] = set(lv[cur], s, m, pos, v);
+        else rv[cur] = set(rv[cur], m + 1, e, pos, v);
+        seg[cur] = op(seg[lv[cur]], seg[rv[cur]]);
+        return cur;
+    }
+
+    node query(int idx, int s, int e, int l, int r) const{
+        if(!idx || r < s || e < l) return id();
+        if(l <= s && r >= e) return seg[idx];
+        int m = (s + e) >> 1;
+        node ln = query(lv[idx], s, m, l, r);
+        node rn = query(rv[idx], m + 1, e, l, r);
+        return op(ln, rn);
+    }
+
+    node diff_seg(int idx1, int idx2) const requires has_inv<policy>{ return op(seg[idx2], inv(seg[idx1])); }
+
+    template<class F>
+    int bisect(int idx, int s, int e, int p, bool right, const F& f, node& v) const{
+        if(right && e < p) return p - 1;
+        if(!right && p < s) return p + 1;
+        if(!idx) return right ? e : s;
+        if((right && p <= s) || (!right && e <= p)){
+            node nxt = right ? op(v, seg[idx]) : op(seg[idx], v);
+            if(f(nxt)){ v = nxt; return right ? e : s; }
+            if(s == e) return right ? s - 1 : s + 1;
+        }
+        int m = (s + e) >> 1;
+        if(right){
+            int ret = bisect(lv[idx], s, m, p, right, f, v);
+            if(ret < m) return ret;
+            return bisect(rv[idx], m + 1, e, p, right, f, v);
+        }
+        int ret = bisect(rv[idx], m + 1, e, p, right, f, v);
+        if(ret > m + 1) return ret;
+        return bisect(lv[idx], s, m, p, right, f, v);
+    }
+
+    template<class F>
+    int bisect_diff(int idx1, int idx2, int s, int e, int p, bool right, const F& f, node& v) const requires has_inv<policy>{
+        if(right && e < p) return p - 1;
+        if(!right && p < s) return p + 1;
+        if(!idx1 && !idx2) return right ? e : s;
+        if((right && p <= s) || (!right && e <= p)){
+            node nxt = right ? op(v, diff_seg(idx1, idx2)) : op(diff_seg(idx1, idx2), v);
+            if(f(nxt)){ v = nxt; return right ? e : s; }
+            if(s == e) return right ? s - 1 : s + 1;
+        }
+        int m = (s + e) >> 1;
+        if(right){
+            int ret = bisect_diff(lv[idx1], lv[idx2], s, m, p, right, f, v);
+            if(ret < m) return ret;
+            return bisect_diff(rv[idx1], rv[idx2], m + 1, e, p, right, f, v);
+        }
+        int ret = bisect_diff(rv[idx1], rv[idx2], m + 1, e, p, right, f, v);
+        if(ret > m + 1) return ret;
+        return bisect_diff(lv[idx1], lv[idx2], s, m, p, right, f, v);
+    }
+public:
+    _pst(int n = 0, int q = 0){ clear(n, q); } // q -> update size
+    void clear(int n, int q){ // O(q log n)
+        this->n = n; this->q = q;
+        lg = __lg(n + 1) + 2; nc = vc = 0;
+        int mx = (q + 1) * lg + 5;
+        lv.assign(mx, 0); rv.assign(mx, 0);
+        root.assign(q + 1, 0); seg.assign(mx, id());
+    }
+
+    int version() const{ return vc; }
+    void rollback(int x){ vc = max(vc - x, 0); }
+    int set(int idx, const node& v){ return set(vc, idx, v); } // O(log n)
+    int set(int ver, int idx, const node& v){ // O(log n)
+        assert(0 <= ver && ver <= vc);
+        assert(vc + 1 <= q); assert(0 <= idx && idx <= n);
+        root[++vc] = set(root[ver], 0, n, idx, v);
+        return vc;
+    }
+
+    node query(int ver, int idx) const{ return query(ver, idx, idx); } // O(log n)
+    node query(int ver, int l, int r) const{ // O(log n)
+        assert(0 <= ver && ver <= vc);
+        l = max(0, l); r = min(n, r);
+        if(l > r) return id();
+        return query(root[ver], 0, n, l, r);
+    }
+
+    node diff_query(int ver1, int ver2, int idx) const requires has_inv<policy>
+    { return diff_query(ver1, ver2, idx, idx); } // O(log n)
+
+    node diff_query(int ver1, int ver2, int l, int r) const requires has_inv<policy>{ // O(log n)
+        ver1--; assert(0 <= ver1 && ver1 <= vc); assert(0 <= ver2 && ver2 <= vc);
+        l = max(0, l); r = min(n, r);
+        if(l > r) return id();
+        return op(query(root[ver2], 0, n, l, r), inv(query(root[ver1], 0, n, l, r)));
+    }
+
+    template<class F>
+    int max_right(int ver, int l, const F& f) const{
+        assert(0 <= ver && ver <= vc); assert(0 <= l && l <= n);
+        assert(f(id())); node v = id();
+        return bisect(root[ver], 0, n, l, 1, f, v);
+    }
+
+    template<class F>
+    int min_left(int ver, int r, const F& f) const{
+        assert(0 <= ver && ver <= vc); assert(0 <= r && r <= n);
+        assert(f(id())); node v = id();
+        return bisect(root[ver], 0, n, r, 0, f, v);
+    }
+
+    template<class F>
+    int diff_max_right(int ver1, int ver2, int l, const F& f) const requires has_inv<policy>{
+        ver1--; assert(0 <= ver1 && ver1 <= vc); assert(0 <= ver2 && ver2 <= vc);
+        assert(0 <= l && l <= n); assert(f(id())); node v = id();
+        return bisect_diff(root[ver1], root[ver2], 0, n, l, 1, f, v);
+    }
+
+    template<class F>
+    int diff_min_left(int ver1, int ver2, int r, const F& f) const requires has_inv<policy>{
+        ver1--; assert(0 <= ver1 && ver1 <= vc); assert(0 <= ver2 && ver2 <= vc);
+        assert(0 <= r && r <= n); assert(f(id())); node v = id();
+        return bisect_diff(root[ver1], root[ver2], 0, n, r, 0, f, v);
+    }
+
+    int max_xor(int ver1, int ver2, int x){ 
+        return max_xor(root[ver1 - 1], root[ver2], x, 0, (1 << 19) - 1, 18); 
+    }
+    int max_xor(int idx1, int idx2, int x, int s, int e, int bit){
+        if(s == e) return s;
+        int l = diff_seg(lv[idx1], lv[idx2]).v;
+        int r = diff_seg(rv[idx1], rv[idx2]).v;
+        int m = (s + e) >> 1, ret = 0;
+        if(x & (1 << bit)){
+            if(l) return max_xor(lv[idx1], lv[idx2], x, s, m, bit - 1);
+            else if(r) return max_xor(rv[idx1], rv[idx2], x, m + 1, e, bit - 1);
+        }
+        else{
+            if(r) return max_xor(rv[idx1], rv[idx2], x, m + 1, e, bit - 1);
+            else if(l) return max_xor(lv[idx1], lv[idx2], x, s, m, bit - 1);
+        }
+
+        return 0;
+    }
+};
+
+void run(){
+    cin >> m; _pst pst((1 << 19) - 1, m);
+    while(m--){
+        int op, l, r, x; cin >> op;
+        if(op == 1){
+            cin >> x; 
+            pst.set(x, 1);
+        }
+        else if(op == 2){
+            cin >> l >> r >> x;
+            cout << pst.max_xor(l, r, x) << "\n";
+        }
+        else if(op == 3){
+            cin >> x;
+            pst.rollback(x);
+        }
+        else if(op == 4){
+            cin >> l >> r >> x;
+            cout << pst.diff_query(l, r, 1, x).v << "\n";
+        }
+        else{
+            cin >> l >> r >> x;
+            auto f = [&](const group::node& v){
+                return v.v < x;
+            };
+            cout << pst.diff_max_right(l, r, 1, f) + 1 << "\n";
+        }
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
