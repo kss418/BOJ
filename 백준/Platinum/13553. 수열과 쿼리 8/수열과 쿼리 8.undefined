@@ -1,0 +1,187 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+template <class policy>
+concept has_inv = requires(const typename policy::node& a){
+    { policy::inv(a) } -> std::same_as<typename policy::node>;
+};
+
+struct group{
+    struct node{
+        int v;
+        node(int v = 0) : v(v){}
+    };
+    static node op(const node& l, const node& r){
+        return {l.v + r.v};
+    }
+    static node inv(const node& a){
+        return {-a.v};
+    }
+};
+
+template <class policy = group>
+class _fw{ // 0-based index
+private:
+    using node = typename policy::node;
+    vector <node> bit; int n;
+    node op(const node& l, const node& r) const{ return policy::op(l, r); }
+    node id() const{ return node(); }
+    node inv(const node& a) const{ return policy::inv(a); }
+public:
+    _fw(int n = 0){ clear(n); } // O(n)
+    _fw(const vector<node>& arr){ build(arr); } // O(n)
+    void clear(int n){ // O(n)
+        this->n = n;
+        bit.assign(n + 2, id());
+    }
+
+    void build(const vector<node>& arr){ // O(n)
+        if(arr.empty()){ clear(0); return; }
+        clear((int)arr.size() - 1);
+        for(int i = 0;i <= n;i++) bit[i + 1] = arr[i];
+        for(int i = 1;i <= n + 1;i++){
+            int j = i + (i & -i);
+            if(j <= n + 1) bit[j] = op(bit[j], bit[i]);
+        }
+    }
+
+    // range query -> need inv
+    node query(int idx) requires has_inv<policy> { return query(idx, idx); } // O(log n)
+    node query(int l, int r) requires has_inv<policy> { // O(log n)
+        l = max(l, 0); r = min(r, n);
+        if(l > r) return id();
+        return op(pre(r), inv(pre(l - 1))); 
+    }
+
+    // return 0 ~ idx
+    node pre(int idx){ // O(log n)
+        node ret = id(); idx = min(idx, n);
+        for(int i = idx + 1;i > 0;i -= i & -i) ret = op(ret, bit[i]);
+        return ret;
+    }
+
+    void set(int idx, const node& v) requires has_inv<policy> { // O(log n)
+        if(idx < 0 || idx > n) return;
+        node cur = query(idx, idx), d = op(v, inv(cur));         
+        update(idx, d);                
+    }
+
+    void update(int idx, const node& v){ // O(log n)
+        if(idx < 0 || idx > n) return;
+        for(int i = idx + 1;i <= n + 1;i += i & -i) bit[i] = op(bit[i], v);
+    }
+}; _fw fw;
+
+struct mos_policy{
+    struct node{
+        int v;
+        node(int v = 0) : v(v){}
+    };
+    struct ret{
+        ll v;
+        ret(ll v = 0) : v(v){}
+    };
+    static void push_front(int idx, const node& v, ret& cur){
+        cur.v += fw.query(v.v - k, v.v + k).v;
+        fw.update(v.v, 1);
+    }
+    static void push_back(int idx, const node& v, ret& cur){
+        push_front(idx, v, cur);
+    }
+    static void pop_front(int idx, const node& v, ret& cur){
+        fw.update(v.v, -1);
+        cur.v -= fw.query(v.v - k, v.v + k).v;
+    }
+    static void pop_back(int idx, const node& v, ret& cur){
+        pop_front(idx, v, cur);
+    }
+};
+
+template <class policy = mos_policy>
+class _mos{
+public:
+    using node = typename policy::node;
+    using ret  = typename policy::ret;
+private:
+    int n, b, cl = 0, cr = -1; ret cur = ret_id();
+    static void push_front(int idx, const node& v, ret& cur){ policy::push_front(idx, v, cur); }
+    static void push_back(int idx, const node& v, ret& cur){ policy::push_back(idx, v, cur); }
+    static void pop_front(int idx, const node& v, ret& cur){ policy::pop_front(idx, v, cur); }
+    static void pop_back(int idx, const node& v, ret& cur){ policy::pop_back(idx, v, cur); }
+    static node node_id(){ return node(); }
+    static ret ret_id(){ return ret();  }
+    struct query{ int l, r, idx; };
+    struct cmp {
+        int b;
+        bool operator()(const query& a, const query& c) const {
+            int ab = a.l / b, cb = c.l / b;
+            if(ab != cb) return ab < cb;
+            if(ab & 1) return a.r > c.r;
+            return a.r < c.r;
+        }
+    };
+    void apply(int nl, int nr){
+        while(cl > nl){ --cl; push_front(cl, arr[cl], cur); }
+        while(cr < nr){ ++cr; push_back(cr, arr[cr], cur); }
+        while(cl < nl){ pop_front(cl, arr[cl], cur); ++cl; }
+        while(cr > nr){ pop_back(cr, arr[cr], cur); --cr; }
+    }
+public:
+    vector <ret> result; vector <node> arr; vector <query> vq;
+    _mos(int n = 0, int b = 0){ clear(n, b); } // O(n)
+    void clear(int n, int b = 0){ // O(n)
+        this->n = n; this->b = b;
+        if(!b) this->b = sqrt(n + 1); vq.clear();
+        arr.assign(n + 1, node_id()); result.clear();
+        cl = 1; cr = 0; cur = ret_id();
+    }
+
+    const vector<ret>& get_result() const{ return result; } // O(1)
+    void add(int l, int r){ vq.push_back({l, r, (int)vq.size()}); } // O(1)
+    void set(int idx, const node& v){ arr[idx] = v; } // O(1)
+    void build(){ // O(q log q + (n^2 / b + qb) * update)
+        if (vq.empty()) { result.clear(); return; } 
+        sort(all(vq), cmp{b}); result.assign(vq.size(), ret_id());
+        for(const auto& cq : vq){
+            apply(cq.l, cq.r);
+            result[cq.idx] = cur;
+        }
+    }
+};
+
+void run(){
+    cin >> n >> k; _mos mos(n); fw = {MAX};
+    for(int i = 1;i <= n;i++){
+        int v; cin >> v;
+        mos.set(i, v);
+    }
+
+    cin >> m;
+    while(m--){
+        int l, r; cin >> l >> r;
+        mos.add(l, r);
+    }
+    
+    mos.build();
+    for(auto&[i] : mos.get_result()) cout << i << "\n";
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
