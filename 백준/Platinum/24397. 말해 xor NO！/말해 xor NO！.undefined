@@ -1,0 +1,129 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+class _xor_trie { // 0-based index
+private:
+    vector <array<int, 2>> adj;
+    vector <int> cnt, pass; int n, m, seq = 1;
+    int push(){ assert(seq < n); return seq++; }
+    int get_state(u64 x) const{
+        int cur = 0;
+        for(int i = m;i >= 0;i--){
+            bool bit = (x >> i) & 1ull; int nxt = adj[cur][bit];
+            if(!nxt) return -1; cur = nxt;
+        }
+        return cur;
+    }
+
+    u64 arg(u64 x, bool is_max) const{
+        if(!size()) return 0; int cur = 0; u64 ret = 0;
+        for(int i = m;i >= 0;i--){
+            bool bit = (x >> i) & 1ull, need = bit ^ is_max;
+            int nxt = adj[cur][need];
+            if(nxt && pass[nxt] > 0){
+                ret |= (u64)(need) << i; cur = nxt;
+            }
+            else{
+                ret |= (u64)(need ^ 1) << i;
+                cur = adj[cur][need ^ 1];
+            }
+        }
+        return ret;
+    }
+public:
+    _xor_trie(int items = 0, int max_bit = 0){ clear(items, max_bit); } // O(max_items)
+    void clear(int items, int max_bit){ // O(items)
+        this->m = max_bit; int sz = items * (m + 1) + 1; this->n = sz; seq = 1;
+        cnt.assign(sz, 0); adj.assign(sz, {0, 0}); pass.assign(sz, 0);
+    }
+
+    int size() const { return pass.empty() ? 0 : pass[0]; } // O(1)
+    void insert(u64 x){ // O(max_bit)
+        int cur = 0; pass[cur]++;
+        for(int i = m;i >= 0;i--){
+            bool bit = (x >> i) & 1ull;
+            if(!adj[cur][bit]) adj[cur][bit] = push();
+            cur = adj[cur][bit]; pass[cur]++;
+        }
+        cnt[cur]++;
+    }
+
+    bool erase(u64 x){ // O(max_bit)
+        int state = get_state(x);
+        if(state == -1 || !cnt[state]) return 0; 
+        int cur = 0; cnt[state]--; pass[cur]--;
+        for(int i = m;i >= 0;i--){
+            bool bit = (x >> i) & 1ull;
+            cur = adj[cur][bit]; pass[cur]--;
+        }
+        return 1;
+    }
+
+    u64 max(u64 x) const{ return x ^ argmax(x); } // O(max_bit)
+    u64 argmax(u64 x) const{ return arg(x, 1); } // O(max_bit)
+    u64 min(u64 x) const{ return x ^ argmin(x); } // O(max_bit)
+    u64 argmin(u64 x) const{ return arg(x, 0); } // O(max_bit)
+
+    int greater(u64 x, u64 k){ return size() - less(x, k + 1); }
+    int eqaul(u64 x, u64 k){ return less(x, k + 1) - less(x, k); }
+    int less(u64 x, u64 k){
+        int cur = 0, ret = 0;
+        for(int i = m;i >= 0;i--){
+            bool kb = (k >> i) & 1ull, xb = (x >> i) & 1ull;
+            if(kb){   
+                if(adj[cur][xb]) ret += pass[adj[cur][xb]];
+                if(!adj[cur][xb ^ 1]) return ret;
+            }
+            else if(!adj[cur][xb]) return ret;
+            cur = adj[cur][xb ^ kb];
+        }
+        return ret;
+    }
+
+    int count(u64 x) const{ return count_state(get_state(x)); } // O(max_bit)
+    int count_state(int state) const{ return (state == -1 ? 0 : cnt[state]); } // O(1);
+    int sub(u64 x) const{ return sub_state(get_state(x)); } // O(max_bit)
+    int sub_state(int state) const{ return (state == -1 ? 0 : pass[state]); } // O(1)
+
+    int go(int state, bool bit) const{ // O(1)
+        if(state < 0 || state >= seq) return -1;
+        int nxt = adj[state][bit];
+        return nxt ? nxt : -1;
+    }
+};
+
+void run(){
+    cin >> n >> m >> k; _xor_trie trie(n, 31);
+    for(int i = 1;i <= n;i++){
+        int v; cin >> v;
+        trie.insert(v);
+    }
+
+    ll result = 0;
+    while(m--){
+        int v; cin >> v;
+        result += trie.less(v, k);
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
