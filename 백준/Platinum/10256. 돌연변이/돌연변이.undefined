@@ -1,0 +1,122 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+string a, b;
+
+template <int M>
+class _ac{
+private:
+    vector <array<int, M>> adj;
+    vector <ll> cnt; vector<int> f; bool built;
+    vector <int> tf(const string& s) const{
+        vector <int> ret; ret.reserve(s.size());
+        for(auto& i : s){
+            if('a' <= i && i <= 'z') ret.push_back(i - 'a');
+            else if('A' <= i && i <= 'Z') ret.push_back(i - 'A');
+            else ret.push_back(i - '0');
+        }
+        return ret;
+    }
+
+    int new_node(){
+        adj.push_back(array<int, M>{}); f.push_back(0); cnt.push_back(0);
+        return (int)adj.size() - 1;
+    }
+public:
+    _ac(){ clear(); } // O(1)
+    void clear(){ // O(1)
+        built = 0; adj.clear(); 
+        f.clear(); cnt.clear(); new_node();
+    }
+    
+    void reserve(int max_node){ // O(1)
+        adj.reserve(max_node); f.reserve(max_node);
+        cnt.reserve(max_node);
+    }
+
+    int size() const{ return (int)adj.size(); } // O(1)
+    void insert(const string& s){ insert(tf(s)); } // O(|s|)
+    void insert(const vector <int>& v){ // O(|v|)
+        assert(!built); int cur = 0;
+        for(auto &c : v){
+            assert(0 <= c && c < M);
+            if(!adj[cur][c]) adj[cur][c] = new_node();
+            cur = adj[cur][c];
+        }
+        cnt[cur] = 1;
+    }
+    
+    void build(){ // O(max_node * m)
+        assert(!built); built = 1; deque <int> q;
+        for(int c = 0;c < M;c++){
+            int nxt = adj[0][c];
+            if(!nxt) continue;
+            f[nxt] = 0; q.push_back(nxt);
+        }
+        
+        while(!q.empty()){
+            int cur = q.front(); q.pop_front();
+            for(int c = 0;c < M;c++){
+                int nxt = adj[cur][c];
+                if(!nxt) continue;
+                int dest = f[cur];
+                while(dest && !adj[dest][c]) dest = f[dest];
+                if(adj[dest][c]) dest = adj[dest][c];
+                f[nxt] = dest; cnt[nxt] += cnt[f[nxt]]; q.push_back(nxt);
+            }
+        }
+    }
+
+    ll count(const string& s) const{ return count(tf(s)); } // O(|s|)
+    ll count(const vector <int>& v) const{ // O(|v|)
+        assert(built); int cur = 0; ll ret = 0;
+        for(auto& c : v){
+            assert(0 <= c && c < M);
+            cur = go(cur, c);
+            ret += cnt[cur];
+        }
+        return ret;
+    }
+
+    int go(int state, int c) const{ // amortized O(1)
+        assert(0 <= c && c < M && built);
+        while(state && !adj[state][c]) state = f[state];
+        if(adj[state][c]) state = adj[state][c];
+        else state = 0;
+        return state;
+    }
+};
+
+void run(){
+    cin >> n >> m >> a >> b; _ac <26> ac;
+    ac.insert(b);
+    for(int i = 0;i < m;i++){
+        for(int j = i + 1;j < m;j++){
+            reverse(b.begin() + i, b.begin() + j + 1);
+            ac.insert(b);
+            reverse(b.begin() + i, b.begin() + j + 1);
+        }
+    }
+
+    ac.build();
+    cout << ac.count(a) << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
