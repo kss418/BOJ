@@ -94,21 +94,33 @@ public:
         assert(0 <= c && c < M && built);
         return adj[state][c];
     }
-};
+}; _ac <4> ac; 
 
+vector <int> tf(const string& s){
+    vector <int> ret;
+    for(auto& i : s){
+        if(i == 'T') ret.push_back(0);
+        if(i == 'G') ret.push_back(1);
+        if(i == 'C') ret.push_back(2);
+        if(i == 'A') ret.push_back(3);
+    }
+    return ret;
+}
+
+unordered_set <string> st;
 void run(){
-    cin >> n >> m >> a >> b; _ac ac; ac.reserve(m * m * m + m);
-    ac.insert(b);
+    cin >> n >> m >> a >> b; 
+    ac.clear(); ac.insert(tf(b)); 
     for(int i = 0;i < m;i++){
         for(int j = i + 1;j < m;j++){
             reverse(b.begin() + i, b.begin() + j + 1);
-            ac.insert(b);
+            if(!st.count(b)){ st.insert(b); ac.insert(tf(b)); }
             reverse(b.begin() + i, b.begin() + j + 1);
         }
     }
 
     ac.build();
-    cout << ac.count(a) << "\n";
+    cout << ac.count(tf(a)) << "\n";
 }
 
 int main() {
