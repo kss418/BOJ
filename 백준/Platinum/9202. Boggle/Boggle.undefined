@@ -1,0 +1,200 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 301010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+class _trie { // 0-based index
+private:
+    vector <vector<int>> adj;
+    vector <int> cnt, pass; int n, m, seq = 1;
+    int push(){ assert(seq < n); return seq++; }
+    vector <int> tf(const string& s) const{  
+        vector <int> ret;
+        for(auto& i : s){
+            if('a' <= i && i <= 'z') ret.push_back(i - 'a');
+            else if('A' <= i && i <= 'Z') ret.push_back(i - 'A');
+            else ret.push_back(i - '0');
+        }
+        return ret;
+    }
+
+    int get_node(const vector <int>& v) const{
+        int cur = 0;
+        for(auto& c : v){
+            assert(0 <= c && c < m);
+            if (adj[cur].empty() || !adj[cur][c]) return -1;
+            cur = adj[cur][c];
+        }
+        return cur;
+    }
+public:
+    _trie(int n = 0, int m = 0){ clear(n, m); } // O(n)
+    void clear(int n, int m){ // O(n)
+        this->m = m; this->n = n; seq = 1;
+        cnt.assign(n, 0); adj.assign(n, {}); pass.assign(n, 0);
+    }
+
+    int size() const { return pass.empty() ? 0 : pass[0]; } // O(1)
+    void insert(const string& s){ insert(tf(s)); } // O(|s|)
+    void insert(const vector <int>& v){ // O(|v|)
+        int cur = 0; pass[cur]++;
+        for(auto &c : v){
+            assert(0 <= c && c < m);
+            if(adj[cur].empty()) adj[cur].resize(m);
+            if(!adj[cur][c]) adj[cur][c] = push();
+            cur = adj[cur][c]; pass[cur]++;
+        }
+        cnt[cur]++;
+    }
+
+    bool erase(const string& s) { return erase(tf(s)); } // O(|s|)
+    bool erase(const vector <int>& v){ // O(|v|)
+        int node = get_node(v);
+        if(node == -1 || !cnt[node]) return 0; 
+        int cur = 0; cnt[node]--; pass[cur]--;
+        for(auto &c : v){ cur = adj[cur][c]; pass[cur]--; }
+        return 1;
+    }
+
+    int count(const string& s) const{ return count(tf(s)); } // O(|s|)
+    int count(const vector <int>& v) const{ // O(|v|)
+        int node = get_node(v);
+        return (node == -1 ? 0 : cnt[node]);
+    }
+    int count(int state){
+        return state == -1 ? 0 : cnt[state];
+    }
+
+    int prefix_count(const string& prefix) const { return prefix_count(tf(prefix)); } // O(|s|)
+    int prefix_count(const vector<int>& v) const { // O(|v|)
+        int node = get_node(v);
+        return (node == -1 ? 0 : pass[node]);
+    }
+    int prefix_count(int state){
+        return state == -1 ? 0 : pass[state];
+    }
+
+    int rank(const string& s) const{ return rank(tf(s)); } // O(|s| * m)
+    int rank(const vector <int>& v) const{ // O(|v| * m)
+        int ret = 0, cur = 0;
+        for(auto& c : v){
+            assert(0 <= c && c < m);
+            ret += cnt[cur];
+            if(!adj[cur].empty()){
+                for(int x = 0;x < c;x++){
+                    int nxt = adj[cur][x];
+                    if(nxt) ret += pass[nxt];
+                }
+                int nxt = adj[cur][c];
+                if(!nxt) return ret; cur = nxt;
+            }
+            else return ret;
+        }
+        return ret;
+    }
+
+    vector <int> kth(int k) const{ // O(max_len * m)
+        if(k <= 0 || k > pass[0]) return {};
+        vector <int> ret; int cur = 0;
+        while(1){
+            if(k <= cnt[cur]) break;
+            k -= cnt[cur];
+            for(int c = 0;c < m;c++){
+                int nxt = adj[cur][c];
+                if(!nxt) continue;
+                if(pass[nxt] >= k){
+                    ret.push_back(c);
+                    cur = nxt; break;
+                }
+                else k -= pass[nxt];
+            }
+        }
+        return ret;
+    }
+
+    int go(int cur, int c) const{ // O(1)
+        if(cur < 0 || cur >= seq) return -1;
+        assert(0 <= c && c < m);
+        if(adj[cur].empty()) return -1;
+        int nxt = adj[cur][c];
+        return nxt ? nxt : -1;
+    }
+}; _trie trie;
+
+string st[4];
+bool v[4][4];
+int dy[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+int dx[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
+
+bool outrange(int cy, int cx){
+    return cy < 0 || cx < 0 || cy >= 4 || cx >= 4;
+}
+
+int sc(int sz){
+    if(sz == 1 || sz == 2) return 0;
+    if(sz == 3 || sz == 4) return 1;
+    if(sz == 5) return 2;
+    if(sz == 6) return 3;
+    if(sz == 7) return 5;
+    return 11;
+}
+
+using pi = pair<int, int>;
+unordered_map <int, bool> mp; string mx; int result;
+void dfs(int cy, int cx, string& s, int state){
+    if(v[cy][cx] || state == -1 || !trie.prefix_count(state)) return; 
+    v[cy][cx] = 1; 
+    for(int i = 0;i < 8;i++){
+        int ny = cy + dy[i], nx = cx + dx[i];
+        if(outrange(ny, nx) || v[ny][nx]) continue; 
+        s += st[ny][nx]; 
+        dfs(ny, nx, s, trie.go(state, st[ny][nx] - 'A'));
+        s.pop_back(); 
+    }
+
+    v[cy][cx] = 0;
+    if(trie.count(state) && !mp[state]){
+        mp[state] = 1; result += sc(s.size());
+        if(s.size() > mx.size()) mx = s;
+        else if(s.size() == mx.size()) mx = min(mx, s);
+    }
+}
+
+void run(){
+    cin >> n; trie = {3010101, 26};
+    for(int i = 0;i < n;i++) cin >> s, trie.insert(s);
+
+    cin >> m;
+    while(m--){
+        for(int i = 0;i < 4;i++) cin >> st[i];
+        int cnt = 0; result = 0; 
+        mp.clear(); mx.clear(); string s; 
+        for(int i = 0;i < 4;i++){
+            for(int j = 0;j < 4;j++){
+                s += st[i][j];
+                dfs(i, j, s, trie.go(0, st[i][j] - 'A'));
+                s.pop_back();
+            }
+        }
+
+        cout << result << " " << mx << " " << mp.size() << "\n";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
