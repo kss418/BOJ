@@ -1,0 +1,178 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+template <class T = ll>
+class _sparse_ac{
+private:
+    vector <ll> cnt; 
+    vector <int> f, dep, dict, head, to, next;
+    vector <T> ch; vector <bool> end; bool built;
+    
+    int new_node(){
+        f.push_back(0); cnt.push_back(0); head.push_back(0);
+        end.push_back(0); dict.push_back(0); dep.push_back(0);
+        return (int)head.size() - 1;
+    }
+
+    void add_edge(int cur, const T& c, int nxt){
+        to.push_back(nxt); ch.push_back(c);
+        next.push_back(head[cur]);
+        head[cur] = (int)to.size() - 1;
+    }
+
+    int child(int state, const T& c) const{
+        for(int e = head[state];e > 0;e = next[e]) if(ch[e] == c) return to[e];
+        return 0;
+    }
+
+    int set_child(int state, const T& c){
+        int nxt = child(state, c);
+        if(nxt) return nxt;
+        int ret = new_node(); add_edge(state, c, ret);
+        return ret;
+    }
+public:
+    _sparse_ac(){ clear(); } // O(1)
+    void clear(){ // O(1)
+        built = 0; end.clear(); dep.clear();
+        f.clear(); dict.clear(); cnt.clear(); 
+        to.clear(); next.clear(); ch.clear(); head.clear();
+        to.push_back(0); next.push_back(0); ch.push_back(T{});
+        new_node();
+    }
+
+    vector <T> tf(const string& s) const{
+        vector <T> ret; ret.reserve(s.size());
+        for(unsigned char c : s) ret.push_back((T)c);
+        return ret;
+    }
+    
+    void reserve(int max_node, int max_edge = -1){ // O(1)
+        f.reserve(max_node); dep.reserve(max_node); head.reserve(max_node);
+        end.reserve(max_node); dict.reserve(max_node); cnt.reserve(max_node);
+        if(max_edge == -1) return;
+        to.reserve(max_edge + 1); next.reserve(max_edge + 1); ch.reserve(max_edge + 1);
+    }
+
+    const vector<int>& depth() const{ return dep; } // O(1)
+    const vector<bool>& terminal() const{ return end; } // O(1)
+    int size() const{ return (int)head.size(); } // O(1)
+    void insert(const string& s){ insert(tf(s)); } // O(|s|)
+    void insert(const vector <T>& v){ // O(|v|)
+        assert(!built); int cur = 0;
+        for(auto &c : v){
+            int nxt = child(cur, c);
+            if(!nxt){
+                nxt = set_child(cur, c);
+                dep[nxt] = dep[cur] + 1;
+            }
+            cur = nxt;
+        }
+        end[cur] = 1; cnt[cur]++;
+    }
+    
+    void build(){ 
+        assert(!built); built = 1; deque <int> q;
+        for(int e = head[0]; e > 0; e = next[e]){
+            int nxt = to[e]; f[nxt] = dict[nxt] = 0;
+            q.push_back(nxt);
+        }
+        
+        while(!q.empty()){
+            int cur = q.front(); q.pop_front();
+            cnt[cur] += cnt[f[cur]];
+            dict[cur] = end[f[cur]] ? f[cur] : dict[f[cur]];
+            for(int e = head[cur];e > 0;e = next[e]){
+                auto c = ch[e]; int p = f[cur], u = child(p, c);
+                while(p && !u) p = f[p], u = child(p, c);
+                int nxt = to[e]; f[nxt] = u; q.push_back(nxt);
+            }
+        }
+    }
+
+    ll count(const string& s) const{ return count(tf(s)); } // O(|s|)
+    ll count(const vector <T>& v) const{ // O(|v|)
+        assert(built); int cur = 0; ll ret = 0;
+        for(auto& c : v){
+            cur = go(cur, c);
+            ret += cnt[cur];
+        }
+        return ret;
+    }
+
+    ll count(int state){
+        return cnt[state];
+    }
+
+    int go(int state, const T& c) const{
+        assert(built);
+        int nxt = child(state, c);
+        while(state && !nxt) state = f[state], nxt = child(state, c);
+        return nxt;
+    }
+
+    vector<int> max_match_len(const string& s) const{ return max_match_len(tf(s)); } // O(|s|)
+    vector<int> max_match_len(const vector<T>& v) const{ // O(|v|)
+        assert(built); vector<int> ret(v.size(), 0); int cur = 0;
+        for(int i = 0; i < (int)v.size(); i++){
+            cur = go(cur, v[i]);
+            ret[i] = end[cur] ? dep[cur] : (dict[cur] ? dep[dict[cur]] : 0);
+        }
+        return ret;
+    }
+
+    vector<vector<int>> match_lens(const string& s, int k = 0x3f3f3f3f) const{ return match_lens(tf(s), k); } // O(|s| + matches)
+    vector<vector<int>> match_lens(const vector<T>& v, int k = 0x3f3f3f3f) const{ // O(|v| + matches)
+        assert(built); if(k <= 0) return vector<vector<int>>(v.size());
+        vector<vector<int>> ret(v.size()); int cur = 0;
+        for(int i = 0; i < (int)v.size(); i++){
+            cur = go(cur, v[i]);
+            if(end[cur]){
+                ret[i].push_back(dep[cur]);
+                if((int)ret[i].size() == k) continue;
+            }
+            for(int x = dict[cur];x > 0 && (int)ret[i].size() < k;x = dict[x]) ret[i].push_back(dep[x]);
+        }
+        return ret;
+    }
+};
+
+void run(){
+    while(1){
+        cin >> n >> m; if(!n && !m) return; _sparse_ac <char> ac;
+        for(int i = 0;i < n;i++) cin >> s, ac.insert(s);
+        ac.build(); int result = 0; cin.ignore(); 
+
+        while(m--){
+            getline(cin, s);
+            auto end = ac.terminal(); int st = 0;
+            for(auto& i : ac.tf(s)){
+                st = ac.go(st, i);
+                if(ac.count(st)) result++, st = 0;
+            }       
+        }
+
+        cout << result << "\n";
+    }
+
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
