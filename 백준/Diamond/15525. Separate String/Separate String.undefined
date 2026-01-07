@@ -1,0 +1,158 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 1e9 + 7;
+ll dp[MAX];
+
+template <int M = 26>
+class _ac{
+private:
+    vector <array<int, M>> adj;
+    vector<int> cnt, f, dep, dict; 
+    vector <bool> end; bool built;
+    vector <int> tf(const string& s) const{
+        vector <int> ret; ret.reserve(s.size());
+        for(auto& i : s){
+            if('a' <= i && i <= 'z') ret.push_back(i - 'a');
+            else if('A' <= i && i <= 'Z') ret.push_back(i - 'A');
+            else ret.push_back(i - '0');
+        }
+        return ret;
+    }
+
+    int new_node(){
+        adj.push_back(array<int, M>{}); f.push_back(0); cnt.push_back(0);
+        end.push_back(0); dict.push_back(0); dep.push_back(0);
+        return (int)adj.size() - 1;
+    }
+public:
+    _ac(){ clear(); } // O(1)
+    void clear(){ // O(1)
+        built = 0; adj.clear(); end.clear(); dep.clear();
+        f.clear(); cnt.clear(); dict.clear(); new_node();
+    }
+    
+    void reserve(int max_node){ // O(1)
+        adj.reserve(max_node); f.reserve(max_node); dep.reserve(max_node);
+        cnt.reserve(max_node); end.reserve(max_node); dict.reserve(max_node);
+    }
+
+    const vector<int>& depth() const{ return dep; }
+    const vector<bool>& terminal() const{ return end; }
+    int size() const{ return (int)adj.size(); } // O(1)
+    void insert(const string& s){ insert(tf(s)); } // O(|s|)
+    void insert(const vector <int>& v){ // O(|v|)
+        assert(!built); int cur = 0;
+        for(auto &c : v){
+            assert(0 <= c && c < M);
+            int nxt = adj[cur][c];
+            if(!nxt){
+                nxt = new_node();
+                adj[cur][c] = nxt;
+                dep[nxt] = dep[cur] + 1;
+            }
+            cur = adj[cur][c];
+        }
+        end[cur] = 1; cnt[cur]++;
+    }
+    
+    void build(){ // O(max_node * m)
+        assert(!built); built = 1; deque <int> q;
+        for(int c = 0;c < M;c++){
+            int nxt = adj[0][c];
+            if(!nxt) continue;
+            f[nxt] = 0; dict[nxt] = 0; q.push_back(nxt);
+        }
+        
+        while(!q.empty()){
+            int cur = q.front(); q.pop_front();
+            cnt[cur] += cnt[f[cur]];
+            dict[cur] = end[f[cur]] ? f[cur] : dict[f[cur]];
+            for(int c = 0;c < M;c++){
+                int nxt = adj[cur][c];
+                if(!nxt) adj[cur][c] = adj[f[cur]][c];
+                else{
+                    f[nxt] = adj[f[cur]][c];
+                    q.push_back(nxt);
+                }
+            }
+        }
+    }
+
+    ll count(const string& s) const{ return count(tf(s)); } // O(|s|)
+    ll count(const vector <int>& v) const{ // O(|v|)
+        assert(built); int cur = 0; ll ret = 0;
+        for(auto& c : v){
+            assert(0 <= c && c < M);
+            cur = go(cur, c);
+            ret += cnt[cur];
+        }
+        return ret;
+    }
+
+    int go(int state, int c) const{ // O(1)
+        assert(0 <= c && c < M && built);
+        return adj[state][c];
+    }
+
+    vector<int> max_match_len(const string& s) const{ return max_match_len(tf(s)); } // O(|s|)
+    vector<int> max_match_len(const vector<int>& v) const{ // O(|v|)
+        assert(built); vector<int> ret(v.size(), 0); int cur = 0;
+        for(int i = 0; i < (int)v.size(); i++){
+            int c = v[i]; assert(0 <= c && c < M); cur = go(cur, c);
+            ret[i] = end[cur] ? dep[cur] : (dict[cur] ? dep[dict[cur]] : 0);
+        }
+        return ret;
+    }
+
+    vector<vector<int>> match_lens(const string& s, int k = 0x3f3f3f3f) const{ return match_lens(tf(s), k); } // O(|s| + matches)
+    vector<vector<int>> match_lens(const vector<int>& v, int k = 0x3f3f3f3f) const{ // O(|v| + matches)
+        assert(built); if(k <= 0) return vector<vector<int>>(v.size());
+        vector<vector<int>> ret(v.size()); int cur = 0;
+        for(int i = 0; i < (int)v.size(); i++){
+            int c = v[i]; assert(0 <= c && c < M); cur = go(cur, c);
+            if(end[cur]){
+                ret[i].push_back(dep[cur]);
+                if((int)ret[i].size() == k) continue;
+            }
+            for(int x = dict[cur];x > 0 && (int)ret[i].size() < k;x = dict[x]) ret[i].push_back(dep[x]);
+        }
+        return ret;
+    }
+};
+
+void run(){
+    cin >> n; _ac ac;
+    while(n--){
+        cin >> s; ac.insert(s);
+    }
+    ac.build(); cin >> s; dp[0] = 1;
+    auto len = ac.match_lens(s);
+
+    for(int i = 0;i < s.size();i++){
+        for(auto& j : len[i]){
+            dp[i + 1] += dp[i - j + 1];
+            dp[i + 1] %= MOD;
+        }
+    }
+    
+    cout << dp[s.size()];
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
