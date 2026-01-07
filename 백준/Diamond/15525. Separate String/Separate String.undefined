@@ -122,25 +122,21 @@ public:
         vector<vector<int>> ret(v.size()); int cur = 0;
         for(int i = 0; i < (int)v.size(); i++){
             int c = v[i]; assert(0 <= c && c < M); cur = go(cur, c);
-            if(end[cur]){
-                ret[i].push_back(dep[cur]);
-                if((int)ret[i].size() == k) continue;
-            }
-            for(int x = dict[cur];x > 0 && (int)ret[i].size() < k;x = dict[x]) ret[i].push_back(dep[x]);
+            ret.push_back(match_lens(cur, k));
         }
         return ret;
     }
 
-    vector<int> match_lens(int state, int k = 0x3f3f3f3f) const{ 
-        assert(built); if(k <= 0) return vector<int>();
-        vector<int> ret; 
+    template <class F>
+    void it_match_lens(int state, int k, const F& f) const{
+        assert(built); if(k <= 0) return; int cnt = 0;
         if(end[state]){
-            ret.push_back(dep[state]);
-            if((int)ret.size() == k) return ret;
+            f(dep[state]); if(++cnt >= k) return;
         }
-        for(int x = dict[state];x > 0 && (int)ret.size() < k;x = dict[x]) ret.push_back(dep[x]);
-        return ret;
+        for(int x = dict[state];x > 0 && cnt < k;x = dict[x]) f(dep[x]), ++cnt;
     }
+    template <class F>
+    void it_match_lens(int state, const F& f) const{ it_match_lens(state, 0x3f3f3f3f, f); }
 };
 
 void run(){
@@ -153,10 +149,10 @@ void run(){
 
     for(int i = 0;i < s.size();i++){
         st = ac.go(st, s[i] - 'a');
-        for(auto& j : ac.match_lens(st)){
+        ac.it_match_lens(st, [&](int j){
             dp[i + 1] += dp[i - j + 1];
             dp[i + 1] %= MOD;
-        }
+        });
     }
     
     cout << dp[s.size()];
