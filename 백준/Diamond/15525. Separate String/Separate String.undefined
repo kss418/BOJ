@@ -130,6 +130,17 @@ public:
         }
         return ret;
     }
+
+    vector<int> match_lens(int state, int k = 0x3f3f3f3f) const{ 
+        assert(built); if(k <= 0) return vector<int>();
+        vector<int> ret; 
+        if(end[state]){
+            ret.push_back(dep[state]);
+            if((int)ret.size() == k) return ret;
+        }
+        for(int x = dict[state];x > 0 && (int)ret.size() < k;x = dict[x]) ret.push_back(dep[x]);
+        return ret;
+    }
 };
 
 void run(){
@@ -138,10 +149,11 @@ void run(){
         cin >> s; ac.insert(s);
     }
     ac.build(); cin >> s; dp[0] = 1;
-    auto len = ac.match_lens(s);
+    int st = 0;
 
     for(int i = 0;i < s.size();i++){
-        for(auto& j : len[i]){
+        st = ac.go(st, s[i] - 'a');
+        for(auto& j : ac.match_lens(st)){
             dp[i + 1] += dp[i - j + 1];
             dp[i + 1] %= MOD;
         }
