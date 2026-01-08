@@ -1,0 +1,176 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+template <class T = ll>
+class _mnc { // 0-based index
+private:
+    vector <T> arr; vector <int> rad;
+    int n, m = 0; ll even = 0, odd = 0;
+    void build(){
+        this->n = arr.size(); rad.assign(n, 0);
+        int r = -1, c = -1; even = odd = m = 0;
+        for(int i = 0;i < n;i++){
+            if(i <= r) rad[i] = min(r - i, rad[2 * c - i]);
+            while(i + rad[i] + 1 < n && i - rad[i] - 1 >= 0){
+                if(arr[i + rad[i] + 1] == arr[i - rad[i] - 1]) rad[i]++;
+                else break;
+            }
+            if(i + rad[i] > r) c = i, r = i + rad[i];
+            (arr[i] == inf() ? even : odd) += rad[i] / 2 + (arr[i] != inf());
+            m = max(m, rad[i]);
+        }
+    }
+
+    static constexpr T inf() {
+        if constexpr (is_same_v<T, int>) return 0x3f3f3f3f;       
+        else if constexpr (is_same_v<T, char>) return (char)255;
+        else return INF; 
+    }
+
+    template <class It, class F>
+    void build(It begin, It end, const F& f){
+        size_t len = (size_t)distance(begin, end);
+        arr.clear(); arr.reserve(2 * len + 1);
+        const T sep = inf();
+        for(auto it = begin;it != end;++it){
+            arr.push_back(sep); arr.push_back(f(*it));
+        }
+        arr.push_back(sep); build();
+    }
+public:
+    _mnc(){}
+    _mnc(const string& s){ set(s); }
+    _mnc(const vector <T>& v){ set(v); }
+    void set(const string& s){ build(all(s), [&](char c){ return (unsigned char)c; }); }
+    void set(const vector<T>& v){ build(all(v), [&](const T& x){ return x; }); }
+
+    const vector<int>& get_rad() const{ return rad; }
+    ll cnt() const{ return odd + even; } 
+    ll cnt_odd() const{ return odd; }
+    ll cnt_even() const{ return even; }
+    int max_len() const{ return m; } 
+    bool is_pal(int l, int r) const{
+        int m = l + r;
+        return rad[m] >= r - l;
+    }
+
+    pair<int, int> range_odd(int idx) const{
+        int r = rad[2 * idx + 1] / 2;
+        return { idx - r, idx + r };
+    }
+    
+    // center == (idx - 1, idx)
+    pair<int, int> range_even(int idx) const{
+        int r = rad[2 * idx] / 2;
+        return { idx - r, idx + r - 1 };
+    }
+};
+
+struct mt_policy {
+    struct node {
+        ll v;
+        node(ll v = 0) : v(v){}
+        bool operator < (const node& ot) const{ return v < ot.v; }
+    };
+};
+
+template <class policy = mt_policy>
+class _mt{ // 0-based index
+public:
+    using node = typename policy::node;
+private:
+    vector <vector <node>> seg;
+    vector <node> arr; int n, sz = 1;
+    static int count_node(const vector<node>& cur, const node& v, bool is_greater, bool is_less, bool is_eq){
+        int ret = 0;
+        auto lb = lower_bound(cur.begin(), cur.end(), v);
+        auto ub = upper_bound(cur.begin(), cur.end(), v);
+        if(is_eq) ret += (int)(ub - lb);                  
+        if(is_greater) ret += (int)(cur.end() - ub);
+        if(is_less) ret += (int)(lb - cur.begin());
+        return ret; 
+    }
+
+    int query(int st, int en, const node& v, bool is_greater, bool is_less, bool is_eq) const{
+        st = max(st, 0); en = min(en, n);
+        if(n <= 0 || st > en) return 0;
+        int l = sz + st, r = sz + en, ret = 0;
+        while(l <= r){
+            if(l & 1) ret += count_node(seg[l++], v, is_greater, is_less, is_eq);
+            if(!(r & 1)) ret += count_node(seg[r--], v, is_greater, is_less, is_eq);
+            l >>= 1; r >>= 1;
+        }
+        return ret;
+    }
+public:
+    _mt(int n = 0){ clear(n); } // O(n)
+    _mt(const vector <node>& arr){ build(arr); } // O(n log n)
+    void clear(int n){ // O(n)
+        this->n = n; sz = 1; while(sz < n + 1) sz <<= 1; 
+        arr.assign(n + 1, node()); seg.assign(2 * sz, {});
+    }
+
+    void build(const vector <node>& arr){ // O(n log n)
+        clear((int)arr.size() - 1); this->arr = arr; 
+        for(int i = 0; i <= n; i++) seg[sz + i].assign(1, arr[i]);
+        for(int i = sz - 1; i >= 1; i--){
+            auto &l = seg[i << 1], &r = seg[i << 1 | 1], &cur = seg[i];
+            cur.resize(l.size() + r.size());
+            merge(all(l), all(r), cur.begin());
+        }
+    }
+
+    void update(int idx, const node& v){ // O(n)
+        if(idx < 0 || idx > n) return; arr[idx] = v;
+        int p = sz + idx; seg[p].assign(1, v); 
+        for(int i = p >> 1;i >= 1;i >>= 1){
+            auto &l = seg[i << 1], &r = seg[i << 1 | 1], &cur = seg[i];
+            cur.resize(l.size() + r.size());
+            merge(all(l), all(r), cur.begin());
+        }
+    }
+
+    int greater(int st, int en, const node& v) const{ return query(st, en, v, 1, 0, 0); } // O(log^2 n)
+    int less(int st, int en, const node& v) const{ return query(st, en, v, 0, 1, 0); } // O(log^2 n)
+    int geq(int st, int en, const node& v) const{ return query(st, en, v, 1, 0, 1); } // O(log^2 n)
+    int leq(int st, int en, const node& v) const{ return query(st, en, v, 0, 1, 1); } // O(log^2 n)
+    int eq(int st, int en, const node& v) const{ return query(st, en, v, 0, 0, 1); } // O(log^2 n)
+}; _mt <> mt[2];
+
+vector <mt_policy::node> v[2];
+void run(){
+    cin >> s >> m; mt[0] = mt[1] = {s.size() - 1};
+    _mnc <char> mnc(s);
+    auto f = mnc.get_rad(); v[0].push_back(INF);
+    for(int i = 1;i < s.size();i++) v[0].push_back(mnc.range_even(i).x);
+    for(int i = 0;i < s.size();i++) v[1].push_back(mnc.range_odd(i).x);
+    mt[0].build(v[0]); mt[1].build(v[1]);
+
+    while(m--){
+        int idx, len; cin >> idx >> len;
+        ll now = mt[0].leq(idx + max(1, (len + 1) / 2), s.size() - 1, idx);
+        now += mt[1].leq(idx + len / 2, s.size() - 1, idx);
+        if(!len) now++;
+        cout << now << "\n";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
