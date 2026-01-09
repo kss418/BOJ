@@ -1,0 +1,167 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+struct lca_policy{
+    struct node{
+        ll v;
+        node(ll v = MINF) : v(v){}
+    };
+    struct cost{
+        bool v;
+        cost(bool v = false) : v(v){}
+    };
+    static constexpr bool use_node = false;
+    static node lift(const cost& c) { return node(c.v); }
+    static node merge(const node& a, const node& b){ return { max(a.v, b.v) }; }
+};
+
+template <class policy = lca_policy>
+class _lca { // 1-based index
+private:
+    using node = typename policy::node;
+    using cost = typename policy::cost;
+    using edge = pair<int, cost>;
+    vector <vector<int>> p; vector <int> d, comp; 
+    vector <vector<node>> arr;
+    vector <vector<edge>> adj; int n, lg, cc;
+    template<bool USE = policy::use_node>
+    void shift_both(int& a, int& b, node* v = nullptr){
+        for(int i = lg - 1;i >= 0;i--){
+            if(p[i][a] == -1) continue;
+            if(p[i][a] == p[i][b]) continue;
+            if constexpr (USE){
+                *v = policy::merge(*v, arr[i][a]);
+                *v = policy::merge(*v, arr[i][b]);
+            }
+            a = p[i][a]; b = p[i][b];
+        }
+    }
+
+    void build(int cur, int cid) {
+        comp[cur] = cid;
+        for (auto& [nxt, co] : adj[cur]) {
+            if(d[nxt] != -1) continue;
+            p[0][nxt] = cur; d[nxt] = d[cur] + 1;
+            if constexpr (policy::use_node) arr[0][nxt] = policy::lift(co);
+            build(nxt, cid);
+        }
+    }
+
+    template<bool USE = false>
+    int shift(int cur, int diff, node* v = nullptr){ // O(log n)
+        if (diff <= 0) return cur;
+        for (int i = lg;i >= 0; i--) {
+            if(cur == -1) break;
+            if(!(diff & (1ll << i))) continue;
+            if constexpr (USE) *v = policy::merge(*v, arr[i][cur]);
+            cur = p[i][cur];
+        }
+        return cur;
+    }
+public:
+    _lca(int n = 0){ clear(n); } // O(1)
+    void clear(int n){ // O(n)
+        this->n = n; lg = 1; cc = 0;
+        while ((1ll << lg) <= n) lg++; 
+        p.assign(lg + 1, vector<int>(n + 1, -1)); 
+        d.assign(n + 1, -1); adj.assign(n + 1, {}); comp.assign(n + 1, 0);
+        if constexpr (policy::use_node) arr.assign(lg + 1, vector<node>(n + 1, policy::node()));
+    }
+
+    void add(int a, int b, cost co){ addsol(a, b, co); addsol(b, a, co); } // O(1)
+    void addsol(int a, int b, cost co){ adj[a].push_back({b, co}); } // O(1)
+    void build(){ // O(n log n)
+        for(int i = 1;i <= n;i++){
+            if(d[i] != -1) continue;
+            d[i] = 0; ++cc; build(i, cc);
+        }
+        for (int i = 1; i <= lg; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (p[i - 1][j] == -1) continue;
+                p[i][j] = p[i - 1][p[i - 1][j]];
+                if constexpr (policy::use_node) arr[i][j] = policy::merge(arr[i - 1][j], arr[i - 1][p[i - 1][j]]);
+            }
+        }
+    }
+
+    int component(int v) const { return comp[v]; } // O(1)
+    bool same_comp(int a, int b) const { return comp[a] == comp[b]; } // O(1)
+
+    int depth(int v) const { return d[v]; } // O(1)
+    int parent(int v) const { return p[0][v]; } // O(1)
+    int ancestor(int v, int k){  // O(log n)
+        if(k < 0 || k > d[v]) return -1;
+        return shift<false>(v, k); 
+    } 
+   
+    int ret(int a, int b) { // O(log n)
+        if(!same_comp(a, b)) return -1;
+        if(d[a] < d[b]) swap(a, b);
+        a = shift<false>(a, d[a] - d[b]);
+        if (a == b) return a;
+        shift_both<false>(a, b);
+        return p[0][a];
+    }
+
+    int jump(int a, int b, int k){ // O(log n)
+        if(!same_comp(a, b)) return -1;
+        int l = ret(a, b), da = d[a] - d[l], db = d[b] - d[l];
+        if(k < 0 || k > da + db) return -1;
+        if(k <= da) return shift<false>(a, k);
+        return shift<false>(b, da + db - k);
+    }
+
+    int dist(int a, int b){ // O(log n)
+        if(!same_comp(a, b)) return -1;
+        return d[a] + d[b] - 2 * d[ret(a, b)];
+    }
+
+    node query(int a, int b){ // O(log n)
+        static_assert(policy::use_node); node ret = node();
+        if(!same_comp(a, b)) return ret;
+        if(d[a] < d[b]) swap(a, b);
+        a = shift<true>(a, d[a] - d[b], &ret);
+        if(a == b) return ret;
+        shift_both<true>(a, b, &ret);
+        ret = policy::merge(ret, arr[0][a]);
+        return policy::merge(ret, arr[0][b]);
+    }
+};
+
+void run(){
+    cin >> n; _lca lca(n);
+    for(int i = 1;i < n;i++){
+        int s, e; cin >> s >> e;
+        lca.add(s, e, 0);
+    }
+    lca.build();
+
+    cin >> m; int cur = 1, result = 0;
+    while(m--){
+        int idx; cin >> idx;
+        result += lca.dist(cur, idx);
+        cur = idx;
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
