@@ -1,0 +1,122 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010101; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+template <class T = ll>
+class _mnc { // 0-based index
+private:
+    vector <T> arr; vector <int> rad;
+    int n, m = 0; ll even = 0, odd = 0;
+    void build(){
+        this->n = arr.size(); rad.assign(n, 0);
+        int r = -1, c = -1; even = odd = m = 0;
+        for(int i = 0;i < n;i++){
+            if(i <= r) rad[i] = min(r - i, rad[2 * c - i]);
+            while(i + rad[i] + 1 < n && i - rad[i] - 1 >= 0){
+                if(arr[i + rad[i] + 1] == arr[i - rad[i] - 1]) rad[i]++;
+                else break;
+            }
+            if(i + rad[i] > r) c = i, r = i + rad[i];
+            (arr[i] == inf() ? even : odd) += rad[i] / 2 + (arr[i] != inf());
+            m = max(m, rad[i]);
+        }
+    }
+
+    static constexpr T inf() {
+        if constexpr (is_same_v<T, int>) return 0x3f3f3f3f;       
+        else if constexpr (is_same_v<T, char>) return (char)255;
+        else return INF; 
+    }
+
+    template <class It, class F>
+    void build(It begin, It end, const F& f){
+        size_t len = (size_t)distance(begin, end);
+        arr.clear(); arr.reserve(2 * len + 1);
+        const T sep = inf();
+        for(auto it = begin;it != end;++it){
+            arr.push_back(sep); arr.push_back(f(*it));
+        }
+        arr.push_back(sep); build();
+    }
+public:
+    _mnc(){} // O(1)
+    _mnc(const string& s){ set(s); } // O(n)
+    _mnc(const vector <T>& v){ set(v); } // O(n)
+    void set(const string& s){ build(all(s), [&](char c){ return (unsigned char)c; }); } // O(n)
+    void set(const vector<T>& v){ build(all(v), [&](const T& x){ return x; }); } // O(n)
+
+    const vector<int>& get_rad() const{ return rad; } // O(1)
+    ll cnt() const{ return odd + even; } // O(1)
+    ll cnt_odd() const{ return odd; } // O(1)
+    ll cnt_even() const{ return even; } // O(1)
+    int max_len() const{ return m; } // O(1)
+    bool is_pal(int l, int r) const{ // O(1)
+        int m = l + r;
+        return rad[m] >= r - l;
+    }
+
+    pair<int, int> range_odd(int idx) const{ // O(1)
+        int r = rad[2 * idx + 1] / 2;
+        return { idx - r, idx + r };
+    }
+    
+    // center == (idx - 1, idx)
+    pair<int, int> range_even(int idx) const{ // O(1)
+        int r = rad[2 * idx] / 2;
+        return { idx - r, idx + r - 1 };
+    }
+};
+
+ll pre[MAX][2], result[MAX], sum[2];
+void add(int l, int r, int a, int b){
+    if(l > r) return;
+    pre[l][0] += a; pre[r + 1][0] -= a;
+    pre[l][1] += b; pre[r + 1][1] -= b;
+}
+
+void run(){
+    cin >> s >> n; _mnc mnc(s);
+    for(int i = 0;i < s.size();i++){
+        auto v = mnc.range_even(i);
+        if(v.x > v.y) continue; 
+        add(v.x, i - 1, 1, 1 - v.x);
+        add(i, v.y, -1, v.y + 1);
+    }
+
+    for(int i = 0;i < s.size();i++){
+        auto v = mnc.range_odd(i);
+        if(v.x > v.y) continue;
+        add(v.x, i - 1, 1, 1 - v.x);
+        add(i, v.y, -1, v.y + 1);
+    }
+
+    for(int i = 0;i < s.size();i++){
+        sum[0] += pre[i][0];
+        sum[1] += pre[i][1];
+        result[i] = sum[0] * i + sum[1];
+    }
+
+    while(n--){
+        int idx; cin >> idx;
+        cout << result[idx - 1] << "\n";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
