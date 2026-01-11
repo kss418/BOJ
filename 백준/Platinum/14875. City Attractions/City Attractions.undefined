@@ -13,43 +13,10 @@ constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
 constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 301010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
-int a[MAX]; pair <int, int> num[MAX][2];
+pair <int, int> num[MAX][2];
 vector <int> adj[MAX];
 priority_queue <tuple<int, int, int>> pq;
-
-class _st { // 0-base index
-private:
-    vector <vector<int>> lift; ll m; int n, lg; 
-public:
-    _st(int n = 0, ll max_step = 0){ clear(n, max_step); }; // O(n log m)
-    void clear(int n, ll m = 1ll << 60){ // O(n log m)
-        lg = 1; this->n = n; this->m = m;
-        while((1ll << lg) <= m) lg++;
-        lift.assign(lg + 1, vector<int>(n + 2, n + 1));
-    }
-
-    void add(int st, int en, ll co = 1) { lift[0][st] = en; } // O(1)
-    void build(){ // O(n log m)
-        for(int i = 1;i <= lg;i++){
-            for(int j = 0;j <= n;j++){
-                int mid = lift[i - 1][j];
-                if(mid == n + 1 || lift[i - 1][mid] == n + 1) continue;
-                lift[i][j] = lift[i - 1][mid];
-            }
-        }
-    }
-
-    int next(int v) const{ return (lift[0][v] == n + 1 ? -1 : lift[0][v]); } // O(1)
-    pair<int, ll> ret(int cur, ll k) const{ // O(log m)
-        ll co = 0;
-        for(int i = lg; i >= 0; i--){
-            if(cur == n + 1) break;
-            if(k < (1ll << i)) continue;
-            co += (1ll << i); k -= (1ll << i); cur = lift[i][cur];
-        }
-        return {(cur == n + 1 ? -1 : cur), co}; // 도착 정점, 사용한 비용
-    }
-};
+vector <int> f, g;
 
 bool better(pair<int, int> a, pair<int, int> b){
     if(a.x != b.x) return a.x > b.x;
@@ -57,9 +24,9 @@ bool better(pair<int, int> a, pair<int, int> b){
 }
 
 void run(){
-    cin >> n >> m; _st st(n, m);
+    cin >> n >> m;
     for(int i = 1;i <= n;i++){
-        cin >> a[i];
+        int v; cin >> v; pq.push({v, i, i});
         num[i][0] = num[i][1] = {0xc0c0c0c0, 0x3f3f3f3f};
     }
 
@@ -69,7 +36,6 @@ void run(){
         adj[e].push_back(s);
     }
 
-    for(int i = 1;i <= n;i++) pq.push({a[i], i, i});
     while(!pq.empty()){
         auto [cd, ci, cur] = pq.top(); pq.pop();
         if(num[cur][1].x > cd) continue;
@@ -79,9 +45,17 @@ void run(){
         for(auto& nxt : adj[cur]) pq.push({cd - 1, ci, nxt});
     }
 
-    for(int i = 1;i <= n;i++) st.add(i, num[i][0].y == i ? num[i][1].y : num[i][0].y);
-    st.build();
-    cout << st.ret(1, m).x;
+    f.resize(n + 1); g.resize(n + 1);
+    for(int i = 1;i <= n;i++) f[i] = num[i][0].y == i ? num[i][1].y : num[i][0].y;
+    
+    int cur = 1;
+    while(m){
+        if(m & 1) cur = f[cur];
+        for(int i = 1;i <= n;i++) g[i] = f[f[i]];
+        f.swap(g); m >>= 1ll; 
+    }
+    
+    cout << cur << "\n";
 }
 
 int main() {
