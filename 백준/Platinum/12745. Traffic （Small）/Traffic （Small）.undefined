@@ -20,8 +20,8 @@ struct lca_policy{
         node(ll v = MINF) : v(v){}
     };
     struct cost{
-        ll v;
-        cost(ll v = 0) : v(v){}
+        bool v;
+        cost(bool v = false) : v(v){}
     };
     static constexpr bool use_node = false;
     static node lift(const cost& c) { return node(c.v); }
@@ -34,7 +34,7 @@ private:
     using node = typename policy::node;
     using cost = typename policy::cost;
     using edge = pair<int, cost>;
-    vector <vector<int>> p; vector <int> d, comp; 
+    vector <vector<int>> p; vector <int> d, comp, ord; 
     vector <vector<node>> arr;
     vector <vector<edge>> adj; int n, lg, cc;
     template<bool USE = policy::use_node>
@@ -50,13 +50,16 @@ private:
         }
     }
 
-    void build(int cur, int cid) {
-        comp[cur] = cid;
-        for (auto& [nxt, co] : adj[cur]) {
-            if(d[nxt] != -1) continue;
-            p[0][nxt] = cur; d[nxt] = d[cur] + 1;
-            if constexpr (policy::use_node) arr[0][nxt] = policy::lift(co);
-            build(nxt, cid);
+    void build_comp(int root, int cid) {
+        stack <int> st; st.push(root); comp[root] = cid;
+        while(!st.empty()){
+            int cur = st.top(); st.pop(); ord.push_back(cur);
+            for(auto& [nxt, co] : adj[cur]){
+                if(d[nxt] != -1) continue;
+                p[0][nxt] = cur; d[nxt] = d[cur] + 1; comp[nxt] = cid;
+                if constexpr (policy::use_node) arr[0][nxt] = policy::lift(co);
+                st.push(nxt);
+            }
         }
     }
 
@@ -78,15 +81,16 @@ public:
         while ((1ll << lg) <= n) lg++; 
         p.assign(lg + 1, vector<int>(n + 1, -1)); 
         d.assign(n + 1, -1); adj.assign(n + 1, {}); comp.assign(n + 1, 0);
+        ord.clear(); ord.reserve(n);
         if constexpr (policy::use_node) arr.assign(lg + 1, vector<node>(n + 1, policy::node()));
     }
 
-    void add(int a, int b, cost co){ addsol(a, b, co); addsol(b, a, co); } // O(1)
-    void addsol(int a, int b, cost co){ adj[a].push_back({b, co}); } // O(1)
+    void add(int a, int b, cost co = cost()){ addsol(a, b, co); addsol(b, a, co); } // O(1)
+    void addsol(int a, int b, cost co = cost()){ adj[a].push_back({b, co}); } // O(1)
     void build(){ // O(n log n)
         for(int i = 1;i <= n;i++){
             if(d[i] != -1) continue;
-            d[i] = 0; ++cc; build(i, cc);
+            d[i] = 0; ++cc; build_comp(i, cc);
         }
         for (int i = 1; i <= lg; i++) {
             for (int j = 1; j <= n; j++) {
@@ -105,7 +109,13 @@ public:
     int ancestor(int v, int k){  // O(log n)
         if(k < 0 || k > d[v]) return -1;
         return shift<false>(v, k); 
-    } 
+    }
+
+    template<bool REV = true, class F>
+    void it(const F& f) const{
+        if constexpr (!REV) for(auto& v : ord) f(v);
+        else for(auto iter = ord.rbegin(); iter != ord.rend();++iter) f(*iter);
+    }
    
     int ret(int a, int b) { // O(log n)
         if(!same_comp(a, b)) return -1;
@@ -156,9 +166,7 @@ void run(){
     cin >> n >> m; _lca lca(n);
     for(int i = 1;i < n;i++){
         int s, e; cin >> s >> e;
-        adj[s].push_back(e);
-        adj[e].push_back(s);
-        lca.add(s, e, 0);
+        lca.add(s, e);
     }
     lca.build(); 
 
@@ -175,7 +183,14 @@ void run(){
         }
     }
 
-    dfs(); int mx = -1; pair <int, int> idx = {-1, -1};
+    lca.it([&](int cur){
+        int p = lca.parent(cur);
+        if(p == -1) return;
+        sum[cur] += pre[cur];
+        sum[p] += sum[cur];
+    });
+
+    int mx = -1; pair <int, int> idx = {-1, -1};
     for(int i = 2;i <= n;i++){
         int a = i, b = lca.parent(i);
         if(a > b) swap(a, b);
