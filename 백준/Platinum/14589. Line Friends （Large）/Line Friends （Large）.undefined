@@ -1,0 +1,139 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 151010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+class _st { // 0-base index
+private:
+    vector <vector<ll>> sum;
+    vector <vector<int>> lift; ll m; int n, lg; 
+public:
+    _st(int n = 0, ll max_step = 0){ clear(n, max_step); }; // O(n log m)
+    void clear(int n, ll m = 60){ // O(n log m)
+        lg = 1; this->n = n; this->m = m;
+        while((1ll << lg) <= m) lg++;
+        lift.assign(lg + 1, vector<int>(n + 2, n + 1));
+        sum.assign(lg + 1, vector<ll>(n + 2, 1));
+    }
+
+    void add(int st, int en, ll co = 1) { lift[0][st] = en; sum[0][st] = co; } // O(1)
+    void build(){ // O(n log m)
+        for(int i = 1;i <= lg;i++){
+            for(int j = 0;j <= n;j++){
+                int mid = lift[i - 1][j];
+                lift[i][j] = lift[i - 1][mid];
+                sum[i][j] = min<int>(sum[i - 1][j] + sum[i - 1][mid], 0x3f3f3f3f);
+            }
+        }
+    }
+
+    int next(int v) const{ return lift[0][v]; } // O(1)
+    pair<int, ll> ret(int cur, ll k) const{ // O(log m)
+        ll co = 0;
+        for(int i = lg; i >= 0; i--){
+            if(k < sum[i][cur]) continue;
+            co += sum[i][cur]; k -= sum[i][cur]; cur = lift[i][cur];
+        }
+        return {cur, co}; // 도착 정점, 사용한 비용
+    }
+};
+
+class _bs { // integer
+public:
+    template <class F>
+    ll max_right(ll l, ll r, const F& f) {
+        ll lo = l, hi = r, mid = -1;
+        while (hi > lo) {
+            mid = (hi + lo + 1) >> 1ll;
+            if (f(mid)) lo = mid;
+            else hi = mid - 1;
+        }
+
+        return lo;
+    }
+
+    template <class F>
+    ll min_left(ll l, ll r, const F& f) {
+        ll lo = l, hi = r, mid = -1;
+        while (hi > lo) {
+            mid = (hi + lo) >> 1ll;
+            if (f(mid)) hi = mid;
+            else lo = mid + 1;
+        }
+
+        return lo;
+    }
+}; _bs bs; _st st;
+
+pair <int, int> org[MAX];
+int query(int a, int b){
+    if(org[a].x > org[b].x) swap(a, b);
+    ll ret = bs.min_left(1, n + 1, [&](int cur){
+        int mx = st.ret(a, cur - 1).x;
+        if(mx >= n + 1) return false;
+        return org[mx].y >= org[b].x;
+    });
+
+    if(ret >= n + 1) return -1;
+    return ret;
+}
+
+using ti = tuple <int, int, int>;
+ti a[MAX];
+priority_queue <ti> pq;
+void run(){
+    cin >> n; st = {n, n + 2};
+    for(int i = 1;i <= n;i++){
+        st.add(i, i);
+        int s, e; cin >> s >> e;
+        org[i] = {s, e};
+        a[i] = {s, e, i};
+    }
+    org[n + 1] = {INF, INF};
+
+    sort(a + 1, a + n + 1, [](ti i, ti j){
+        auto& [si, ei, ii] = i;
+        auto& [sj, ej, ij] = j;
+        if(ei != ej) return ei > ej;
+        return si > sj;
+    });
+
+    for(int i = 1;i <= n;i++){
+        auto& [s, e, idx] = a[i];
+        while(!pq.empty()){
+            auto& [pe, ps, pidx] = pq.top();
+            if(e >= ps) break; pq.pop();
+        } 
+        
+        if(!pq.empty()){
+            auto& [pe, ps, pidx] = pq.top();
+            st.add(idx, pidx);
+        }
+        pq.push({e, s, idx});
+    }
+    st.build();
+
+    cin >> m;
+    while(m--){
+        int a, b; cin >> a >> b;
+        cout << query(a, b) << "\n";
+    }
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
