@@ -95,7 +95,7 @@ public:
         }
     }
 
-    template <class F, class G, bool REV = true>
+    template <bool REV = true, class F, class G>
     void it_top(const F& merge, const G& done) const{ // O(n + m)
         vector<vector<int>> adj(cc); vector<int> ind(cc, 0);
         it_dag([&](int a, int b){ 
@@ -106,8 +106,7 @@ public:
         while(!q.empty()){
             auto cur = q.front(); q.pop_front(); done(cur);
             for(auto& nxt : adj[cur]){
-                if constexpr (!REV) merge(nxt, cur);
-                else merge(cur, nxt);
+                merge(cur, nxt);
                 if(!--ind[nxt]) q.push_back(nxt);
             }
         }
@@ -119,7 +118,7 @@ void run(){
     cin >> n >> m; _scc scc(n);
     for(int i = 1;i <= n;i++){
         int v; cin >> v;
-        scc.addsol(v, i);
+        scc.addsol(i, v);
     }
     scc.build();
 
@@ -136,12 +135,12 @@ void run(){
         dp1[cur][0] = 1;
     };
  
-    scc.it_top(merge, done);
-    auto ind = scc.ind(); int cnt = 0, result = 0;
+    scc.it_top<false>(merge, done);
+    auto outd = scc.outd(); int cnt = 0, result = 0;
 
     dp2[0][0] = 1;
     for(int i = 0;i < scc.comp_cnt();i++){
-        if(ind[i]) continue;
+        if(outd[i]) continue;
         for(int j = 0;j <= m;j++){
             if(!dp1[i][j]) continue;
             dp2[cnt + 1] |= dp2[cnt] << j;
