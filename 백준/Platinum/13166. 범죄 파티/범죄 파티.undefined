@@ -1,0 +1,235 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+class _scc{ // select base
+private:
+    vector <int> head, to, nxt;
+    vector <int> rhead, rto, rnxt;
+    vector <vector<int>> group;
+    vector <int> comp, ord; vector <bool> v; int n, base, cc;
+    void dfs1(int cur){
+        v[cur] = 1;
+        for(auto i = head[cur];i != -1;i = nxt[i]) if(!v[to[i]]) dfs1(to[i]);
+        ord.push_back(cur);
+    }
+
+    void dfs2(int cur, int cid){
+        comp[cur] = cid; group[cid].push_back(cur);
+        for(auto i = rhead[cur];i != -1;i = rnxt[i]) if(comp[rto[i]] == -1) dfs2(rto[i], cid);
+    }
+
+    void add_edge(int s, int e){
+        nxt.push_back(head[s]);
+        to.push_back(e);
+        head[s] = (int)to.size() - 1;
+        rnxt.push_back(rhead[e]);
+        rto.push_back(s);
+        rhead[e] = (int)rto.size() - 1;
+    }
+public:
+    _scc(int n = 0, int base = 1){ clear(n, base); } // O(n)
+    void clear(int n, int base = 1){ // O(n)
+        this->n = n; this->base = base;
+        cc = 0; head.assign(n + 1, -1); rhead.assign(n + 1, -1);
+        comp.assign(n + 1, -1); group.clear(); ord.clear();
+        to.clear(); nxt.clear(); rto.clear(); rnxt.clear();
+        v.assign(n + 1, false); ord.reserve(n + 1);
+    }
+
+    void addsol(int s, int e){ add_edge(s, e); } // O(1)
+    void build(){ // O(n + m)
+        for(int i = base;i <= n;i++) if(!v[i]) dfs1(i);
+        for(int i = (int)ord.size() - 1;i >= 0;i--){
+            int cur = ord[i]; if(comp[cur] != -1) continue;
+            group.push_back({});
+            dfs2(cur, cc); cc++;
+        }
+    }
+
+    int group_size(int cid) const{ return (int)group[cid].size(); } // O(1)
+    int component(int x) const{ return comp[x]; } // O(1)
+    bool same(int a, int b) const{ return comp[a] == comp[b]; } // O(1)
+    int comp_cnt() const{ return cc; } // O(1)
+    int root(int cid) const{ return group[cid][0]; } // O(1)
+
+    vector <int> ind() const{ // O(n + m)
+        vector<int> ret(cc, 0);
+        it_dag([&](int a, int b){ ret[b]++; });
+        return ret;
+    }
+
+    vector <int> outd() const{ // O(n + m)
+        vector<int> ret(cc, 0);
+        it_dag([&](int a, int b){ ret[a]++; });
+        return ret;
+    }
+
+    template <bool REV = false, class F>
+    void it_cid(const F& f) const{ // O(n)
+        if constexpr(!REV) for(int i = 0;i < cc;i++) f(i);
+        else for(int i = cc - 1;i >= 0;i--) f(i);
+    }
+
+    template <bool REV = false, class F>
+    void it_all(const F& f) const{ // O(n)
+        it_cid<REV>([&](int cid){ for(auto& i : group[cid]) f(i); });
+    }
+
+    template<class F>
+    void it_group(int cid, const F& f) const{ // O(n)
+        for(auto& cur : group[cid]) f(cur);
+    }
+
+    template <class F>
+    void it_dag(const F& f) const{ // O(n + m)
+        vector<int> num(cc, -1);
+        for(int i = 0;i < cc;i++){
+            for(auto& cur : group[i]){
+                for(auto v = head[cur];v != -1;v = nxt[v]){
+                    int j = comp[to[v]];
+                    if(i == j || i == num[j]) continue;
+                    num[j] = i; f(i, j);
+                }
+            }
+        }
+    }
+
+    template <bool REV = true, class F, class G>
+    void it_top(const F& merge, const G& done) const{ // O(n + m)
+        vector<vector<int>> adj(cc); vector<int> ind(cc, 0);
+        it_dag([&](int a, int b){ 
+            if constexpr (REV) swap(a, b);
+            adj[a].push_back(b), ind[b]++; 
+        });
+        deque <int> q; for(int i = 0;i < cc;i++) if(!ind[i]) q.push_back(i);
+        while(!q.empty()){
+            auto cur = q.front(); q.pop_front(); done(cur);
+            for(auto& nxt : adj[cur]){
+                merge(cur, nxt);
+                if(!--ind[nxt]) q.push_back(nxt);
+            }
+        }
+    }
+};
+
+class _2sat{ // selcet base
+private:
+    int n = 0; bool base = 1;
+public:
+    _scc scc; 
+    _2sat(int max_index = 0){ clear(max_index); } // O(n)
+    void clear(int max_index, bool base = 1){ // O(n)
+        this->n = max_index; this->base = base;
+        scc.clear(2 * n + base - 1, base);
+    }
+
+    int pos(int x) const{ return x; } // O(1)
+    int neg(int x) const{ return x + n; } // O(1)
+    int op(int x) const{ return x < n + base ? x + n : x - n; } // O(1)
+
+    void add(int a, int b){ scc.addsol(a, b); } // O(1)
+    void add_or(int a, int b){ add(op(a), b); add(op(b), a); } // O(1)
+    void add_true(int x){ add(op(x), x); } // O(1)
+    void add_false(int x){ add_true(op(x)); } // O(1)
+    void add_eq(int a, int b){ add(a, b); add(b, a); } // O(1)
+    void add_xor(int a, int b){ add_or(a, b); add_or(op(a), op(b)); } // O(1)
+
+    bool solve(){ // O(n + m)
+        scc.build(); 
+        for(int i = base;i < base + n;i++){
+            if(scc.same(pos(i), neg(i))) return false;
+        }
+        return true;
+    }
+
+    template<class F>
+    void it(const F& f) const{ // O(n)
+        for(int i = base; i < base + 2 * n; i++){
+            int x = (scc.component(i) > scc.component(op(i))) ? 1 : 0;
+            f(i, x);
+        }
+    }
+};
+
+class _bs { // integer
+public:
+    template <class F>
+    ll max_right(ll l, ll r, const F& f) {
+        ll lo = l, hi = r, mid = -1;
+        while (hi > lo) {
+            mid = (hi + lo + 1) >> 1ll;
+            if (f(mid)) lo = mid;
+            else hi = mid - 1;
+        }
+
+        return lo;
+    }
+
+    template <class F>
+    ll min_left(ll l, ll r, const F& f) {
+        ll lo = l, hi = r, mid = -1;
+        while (hi > lo) {
+            mid = (hi + lo) >> 1ll;
+            if (f(mid)) hi = mid;
+            else lo = mid + 1;
+        }
+
+        return lo;
+    }
+}; _bs bs;
+
+vector <pll> num[2 * MAX];
+vector <pll> arr[MAX];
+void run(){
+    cin >> n; _2sat sat(n);
+    for(int i = 1;i <= n;i++){
+        int s, c; cin >> s >> c;
+        arr[i].push_back({c, s});
+        num[s].push_back({c, sat.op(i)});
+
+        cin >> s >> c;
+        arr[i].push_back({c, s});
+        num[s].push_back({c, i});
+    }
+
+    auto f = [&](int cur){
+        sat.clear(n); 
+        for(int i = 1;i <= 2 * n;i++){
+            if(num[i].size() <= 1) continue; 
+            sat.add_or(sat.op(num[i][0].y), sat.op(num[i][1].y));
+        }
+        
+        for(int i = 1;i <= n;i++){
+            int mx = max(arr[i][0].x, arr[i][1].x), mn = min(arr[i][0].x, arr[i][1].x);
+            if(mn > cur) return 0;
+            if(mx <= cur) continue;
+            if(arr[i][0].x < arr[i][1].x) sat.add_false(i);
+            else sat.add_true(i);
+        }
+
+        return (int)sat.solve();
+    };
+
+    ll ret = bs.min_left(0, 1010101, f);
+    cout << (ret >= 1010101 ? -1 : ret);
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
