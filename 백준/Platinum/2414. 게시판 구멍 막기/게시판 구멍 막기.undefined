@@ -1,0 +1,168 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 55; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+struct uf_policy{
+    struct node{
+        node(){} // identity
+    };
+    static void merge(node& a, node& b){}
+};
+
+template <class policy = uf_policy>
+class _uf{ // 1-based index
+private:
+    using node = typename policy::node;
+    vector<node> arr;
+    vector<int> p, sz; int n, cc;
+    node id() const{ return node(); }
+public:
+    _uf(int n = 0){ clear(n); } // O(n)
+    void clear(int n){ // O(n)
+        this->n = n; cc = n;
+        p.assign(n + 1, -1); sz.assign(n + 1, 1);
+        arr.assign(n + 1, id());
+    }
+
+    int find(int x){ // O(1)
+        if(p[x] == -1) return x;
+        return p[x] = find(p[x]);
+    }
+
+    bool merge(int a, int b){ // O(1) + policy::merge
+        a = find(a); b = find(b);
+        if(a == b) return false;
+        if(sz[a] < sz[b]) swap(a, b);
+        p[b] = a; sz[a] += sz[b]; cc--;
+        policy::merge(arr[a], arr[b]); arr[b] = id();
+        return true;
+    }
+
+    int count() const{ return cc; } // O(1)
+    node& get(int x){ return arr[find(x)]; } // O(1)
+    void set(int x, const node& v){ arr[find(x)] = v; } // O(1)
+    int size(int x){ return sz[find(x)]; } // O(1)
+    bool root(int x){ return find(x) == x; } // O(1)
+    bool same(int a, int b){ return find(a) == find(b); } // O(1)
+};
+
+class _bm { // 0-based index
+private:
+    vector<vector<int>> adj; int as, bs;
+    vector<int> av, bv, dist;
+    static constexpr int INF = 0x3f3f3f3f;
+    bool bfs(){
+        queue <int> q;
+        for(int i = 0;i <= as;i++){
+            if(av[i] == -1) dist[i] = 0, q.push(i);
+            else dist[i] = INF;
+        }
+        int mn = INF;
+        while(!q.empty()){
+            int cur = q.front(); q.pop();
+            if(dist[cur] >= mn) continue;
+            for(auto& nxt : adj[cur]){
+                int tmp = bv[nxt];
+                if(tmp == -1) mn = dist[cur] + 1;
+                else if(dist[tmp] >= INF) dist[tmp] = dist[cur] + 1, q.push(tmp);
+            }
+        }
+        return mn < INF;
+    }
+
+    bool dfs(int cur){
+        for(auto& nxt : adj[cur]){
+            int tmp = bv[nxt];
+            if(tmp == -1 || (dist[tmp] == dist[cur] + 1 && dfs(tmp))){
+                av[cur] = nxt; bv[nxt] = cur;
+                return true;
+            }
+        }
+        dist[cur] = INF; return false;
+    }
+public:
+    _bm(int a = 0, int b = 0){ clear(a, b); } // O(n)
+    void clear(int a, int b){ // O(n)
+        as = a; bs = b;
+        adj.assign(as + 1, {}); dist.assign(as + 1, 0);
+        av.assign(as + 1, -1); bv.assign(bs + 1, -1);
+    }
+
+    void addsol(int s, int e){ adj[s].push_back(e); } // O(1)
+    int ret(){ // O(m sqrt n)
+        int result = 0;
+        while(bfs()){
+            for(int i = 0;i <= as;i++){
+                if(av[i] != -1) continue;
+                result += dfs(i);
+            }
+        }
+        return result;
+    }
+
+    template <class F>
+    void it_all(const F& f) const{
+        for(int i = 0;i <= as;i++) f(i, av[i]);
+    }
+
+    template <class F>
+    void it_matched(const F& f) const{
+        for(int i = 0;i <= as;i++) if(av[i] != -1) f(i, av[i]);
+    }
+};
+
+int num(int cy, int cx){
+    return cy * m + cx + 1;
+}
+
+string st[MAX];
+bool outrange(int cy, int cx){
+    return cy < 0 || cx < 0 || cy >= n || cx >= m || st[cy][cx] == '.';
+}
+
+vector <pair<int, int>> adj;
+void run(){
+    cin >> n >> m; _uf uf(2 * n * m + 1);
+    for(int i = 0;i < n;i++) cin >> st[i];
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            if(st[i][j] == '.') continue; int now = num(i, j);
+            if(!outrange(i - 1, j)) uf.merge(now, num(i - 1, j));
+            if(!outrange(i + 1, j)) uf.merge(now, num(i + 1, j));
+            if(!outrange(i, j - 1)) uf.merge(now + n * m, num(i, j - 1) + n * m);
+            if(!outrange(i, j + 1)) uf.merge(now + n * m, num(i, j + 1) + n * m);
+        }
+    }
+
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            if(st[i][j] == '.') continue;
+            int a = uf.find(num(i, j)), b = uf.find(num(i, j) + n * m);
+            adj.push_back({a, b - n * m});
+        }
+    }
+
+    sort(all(adj)); adj.erase(unique(all(adj)), adj.end());
+    _bm bm(n * m, n * m);
+    for(auto& [s, e] : adj) bm.addsol(s, e);
+    cout << bm.ret();
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
