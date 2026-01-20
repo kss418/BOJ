@@ -14,16 +14,23 @@ constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
 constexpr ll MAX = 201010; // SET MAX SIZE
 constexpr ll MOD = 998244353;
 
+template <class T = ll> requires (is_integral_v<T> && is_signed_v<T>)
 class _flow {
 private:
     vector <int> d, w; int n;
     class edge {
     public:
-        int nxt, rev; int c, cap;
-        edge(int nxt, int rev, int c) : nxt(nxt), rev(rev), c(c), cap(c) {}
+        int nxt, rev; T c, cap;
+        edge(int nxt, int rev, T c) : nxt(nxt), rev(rev), c(c), cap(c) {}
     };
     vector <vector<edge>> adj;
-public:
+    static consteval T make_inf() {
+        T x = 0;
+        for (size_t i = 0; i < sizeof(T); ++i) x = (x << 8) | T(0x3f);
+        return x;
+    }
+    static constexpr T INF = make_inf();
+
     bool bfs(int st, int en) { 
         memset(d.data(), -1, sizeof(int) * (n + 1));
         queue <int> q; q.push(st); d[st] = 0;
@@ -39,7 +46,7 @@ public:
         return d[en] != -1;
     }
 
-    int dfs(int cur, int en, int val) { 
+    T dfs(int cur, int en, T val) { 
         if (cur == en) return val;
         int &i = w[cur], sz = (int)adj[cur].size();
         for(;i < sz;++i){
@@ -47,46 +54,60 @@ public:
             if(e.c <= 0) continue;
             int nxt = e.nxt;
             if(d[nxt] != d[cur] + 1) continue;
-            int mn = dfs(nxt, en, min(val, e.c));
+            T mn = dfs(nxt, en, min(val, e.c));
             if(mn <= 0) continue;
             e.c -= mn; adj[nxt][e.rev].c += mn;
             return mn;
         }
         return 0;
     }
-
+public:
     _flow(int n = 0){ clear(n); } // O(n)
     void clear(int n){ // O(n)
         this->n = n; adj.assign(n + 1, {});
         d.assign(n + 1, -1); w.assign(n + 1, 0);
     }
 
-    void addsol(int st, int en, ll c = 1){  // O(1)
+    void addsol(int st, int en, T c = 1){  // O(1)
         int re = (int)adj[en].size(), rs = (int)adj[st].size();
         adj[st].push_back({en, re, c});
         adj[en].push_back({st, rs, 0});
     }
 
-    void add(int st, int en, ll c){ // O(1)
+    void add(int st, int en, T c){ // O(1)
         addsol(st, en, c); addsol(en, st, c);
     }
 
-    int ret(int st, int en){ // O(n^2 * m)
-        int r = 0;
+    T ret(int st, int en){ // O(n^2 * m)
+        T r = 0;
         while(bfs(st, en)){
             memset(w.data(), 0, sizeof(int) * (n + 1));
             while(1){
-                int f = dfs(st, en, 0x3f3f3f3f);
+                T f = dfs(st, en, INF);
                 if(!f) break; r += f;
             }
         }
         return r;
     }
 
+    bool reachable(int st, int en) const{ // O(m)
+        vector <bool> v(n + 1, false); 
+        queue <int> q; v[st] = 1; q.push(st);
+        while(!q.empty()){
+            int cur = q.front(); q.pop();
+            if(cur == en) return true;
+            for(const auto& e : adj[cur]){
+                if(e.c <= 0 || v[e.nxt]) continue;
+                v[e.nxt] = 1; q.push(e.nxt);
+            }
+        }
+        return v[en];
+    }
+
     template <class F>
     void it_idx(int idx, const F& f) const{ // O(|adj[idx]|)
         for(auto& [nxt, rev, c, cap] : adj[idx]){
-            if(!cap || cap - c < 0) continue;
+            if(!cap) continue;
             f(idx, nxt, cap - c, c);
         }
     }
@@ -95,7 +116,7 @@ public:
     void it_all(const F& f) const{ // O(m)
         for(int i = 0;i <= n;i++) it_idx(i, f);
     }
-}; _flow flow;
+}; _flow <int> flow;
 
 void run(){
     cin >> n >> m; flow.clear(n);
@@ -106,7 +127,7 @@ void run(){
     int ret = flow.ret(1, n), cnt = 0;
     flow.it_all([&](int s, int e, int f, int c){
         if(c) return;
-        if(!flow.bfs(s, e)) cnt++;
+        if(!flow.reachable(s, e)) cnt++;
     });
 
     cout << cnt << "\n";
