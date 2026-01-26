@@ -1,0 +1,188 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 55; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+string st[MAX];
+int c[26], dy[4] = {0, 0, 1, -1}, dx[4] = {1, -1, 0, 0};
+
+template <class T = ll> requires (is_integral_v<T> && is_signed_v<T>)
+class _flow {
+public:
+    static consteval T make_inf() {
+        T x = 0;
+        for (size_t i = 0; i < sizeof(T); ++i) x = (x << 8) | T(0x3f);
+        return x;
+    }
+    static constexpr T INF = make_inf();
+    struct handle { int cur, idx; };
+    struct edge {
+        int nxt, rev; T c, cap;
+        edge(int nxt, int rev, T c) : nxt(nxt), rev(rev), c(c), cap(c) {}
+    };
+private:
+    vector <int> d, w; int n;
+    vector <vector<edge>> adj;
+    bool bfs(int st, int en) { 
+        memset(d.data(), -1, sizeof(int) * (n + 1));
+        queue <int> q; q.push(st); d[st] = 0;
+        while (!q.empty()) {
+            int cur = q.front(); q.pop();
+            for (auto& e : adj[cur]) {
+                if(e.c <= 0) continue;
+                int nxt = e.nxt;
+                if (d[nxt] != -1) continue;
+                d[nxt] = d[cur] + 1; q.push(nxt);
+            }
+        }
+        return d[en] != -1;
+    }
+
+    T dfs(int cur, int en, T val) { 
+        if (cur == en) return val;
+        int &i = w[cur], sz = (int)adj[cur].size();
+        for(;i < sz;++i){
+            edge &e = adj[cur][i];
+            if(e.c <= 0) continue;
+            int nxt = e.nxt;
+            if(d[nxt] != d[cur] + 1) continue;
+            T mn = dfs(nxt, en, min(val, e.c));
+            if(mn <= 0) continue;
+            e.c -= mn; adj[nxt][e.rev].c += mn;
+            return mn;
+        }
+        return 0;
+    }
+public:
+    _flow(int n = 0){ clear(n); } // O(n)
+    void clear(int n){ // O(n)
+        this->n = n; adj.assign(n + 1, {});
+        d.assign(n + 1, -1); w.assign(n + 1, 0);
+    }
+
+    void reset(){ // O(n + m)
+        for(int i = 0;i <= n;i++){
+            for(auto& e : adj[i]) e.c = e.cap;
+        }
+    }
+
+    handle addsol(int st, int en, T c = INF){  // O(1)
+        int re = (int)adj[en].size(), rs = (int)adj[st].size();
+        adj[st].push_back({en, re, c});
+        adj[en].push_back({st, rs, 0});
+        return {st, rs};
+    }
+
+    pair <handle, handle> add(int st, int en, T c = INF){ // O(1)
+        auto h1 = addsol(st, en, c); auto h2 = addsol(en, st, c);
+        return {h1, h2};
+    }
+
+    T build(int st, int en, T f = INF){ // O(n^2 * m)
+        T r = 0;
+        while(bfs(st, en) && f){
+            memset(w.data(), 0, sizeof(int) * (n + 1));
+            while(f){
+                T now = dfs(st, en, f);
+                if(!now) break; r += now; f -= now;
+            }
+        }
+        return r;
+    }
+
+    bool reachable(int st, int en) const{ // O(m)
+        vector <bool> v(n + 1, false); 
+        queue <int> q; v[st] = 1; q.push(st);
+        while(!q.empty()){
+            int cur = q.front(); q.pop();
+            if(cur == en) return true;
+            for(const auto& e : adj[cur]){
+                if(e.c <= 0 || v[e.nxt]) continue;
+                v[e.nxt] = 1; q.push(e.nxt);
+            }
+        }
+        return v[en];
+    }
+
+    template <class F>
+    void it_idx(int idx, const F& f) const{ // O(|adj[idx]|)
+        for(auto& [nxt, rev, c, cap] : adj[idx]){
+            if(!cap) continue;
+            f(idx, nxt, cap - c, c);
+        }
+    }
+
+    template <class F>
+    void it_all(const F& f) const{ // O(m)
+        for(int i = 0;i <= n;i++) it_idx(i, f);
+    }
+
+    edge& get_edge(const handle& h){ return adj[h.cur][h.idx]; } // O(1)
+    const edge& get_edge(const handle& h) const{ return adj[h.cur][h.idx]; } // O(1)
+
+    edge& get_rev(const handle& h){ auto& e = get_edge(h); return adj[e.nxt][e.rev]; } // O(1)
+    const edge& get_rev(const handle& h) const{ auto& e = get_edge(h); return adj[e.nxt][e.rev]; } // O(1)
+    
+    T get_flow(const handle& h) const{ auto& e = get_edge(h); return e.cap - e.c; } // O(1)
+    void add_flow(const handle& h, T delta){ set_flow(h, get_flow(h) + delta); } // O(1)
+    void set_flow(const handle& h, T f){ // O(1)
+        auto& e = get_edge(h), &re = get_rev(h);
+        e.c = e.cap - f; re.c = f;
+    }
+
+    T get_cap(const handle& h) const{ return get_edge(h).cap; } // O(1)
+    void add_cap(const handle& h, T delta){ set_cap(h, get_cap(h) + delta); } // O(1)
+    void set_cap(const handle& h, T cap){ // O(1)
+        auto& e = get_edge(h), &re = get_rev(h);
+        T f = e.cap - e.c; e.cap = cap;
+        e.c = cap - f; re.c = f;
+    }
+};
+
+int sink, pl = 1e8;
+bool out(int cy, int cx){
+    return cy < 0 || cx < 0 || cy >= n || cx >= m;
+}
+
+int num(int cy, int cx, bool out){
+    return out * (n * m) + cy * m + cx;
+}
+
+void run(){
+    cin >> n >> m; _flow flow(2 * n * m);
+    for(int i = 0;i < n;i++) cin >> st[i];
+    for(int i = 0;i < 26;i++) cin >> c[i];
+
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < m;j++){
+            if(st[i][j] == '-') continue;
+            for(int k = 0;k < 4;k++){
+                int ny = i + dy[k], nx = j + dx[k];
+                if(out(ny, nx)) flow.addsol(2 * n * m, num(i, j, 0));
+                else if(st[ny][nx] != '-') flow.addsol(num(ny, nx, 1), num(i, j, 0));
+            }
+
+            if(st[i][j] == '*') sink = num(i, j, 0);
+            flow.addsol(num(i, j, 0), num(i, j, 1), c[st[i][j] - 'A'] + pl);
+        }
+    }
+
+    cout << flow.build(2 * n * m, sink) % pl;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
