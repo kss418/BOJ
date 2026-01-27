@@ -1,0 +1,87 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 101010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+vector <pair<int, int>> adj[MAX];
+vector <bool> use[MAX];
+vector <tuple<int, int, int>> result;
+int lv[MAX]; bool v[MAX];
+
+void bfs(int st){
+    queue <int> q; q.push(st); lv[st] = 0;
+    while(!q.empty()){
+        auto cur = q.front(); q.pop();
+        for(auto& [nxt, rev] : adj[cur]){
+            if(lv[nxt] != -1) continue;
+            lv[nxt] = lv[cur] + 1;
+            q.push(nxt);
+        }
+    }
+}
+
+void dfs(int cur, int pre = -1){
+    for(auto& [nxt, rev] : adj[cur]){
+        if(lv[nxt] != lv[cur] + 1) continue;
+        dfs(nxt, cur);
+    }
+
+    vector <pair<int, int>> tmp;
+    for(int i = 0;i < adj[cur].size();i++){
+        auto& [nxt, rev] = adj[cur][i];
+        if(!v[nxt] || use[cur][i] || use[nxt][rev]) continue;
+        tmp.push_back({nxt, rev});
+    }
+
+    for(int i = 0;i < adj[cur].size();i++){
+        auto& [nxt, rev] = adj[cur][i];
+        if(v[nxt] || use[nxt][rev] || use[cur][i]) continue;
+        tmp.push_back({nxt, rev});
+    }
+
+    for(int i = 0;i + 1 < tmp.size();i += 2){
+        auto& [av, ar] = tmp[i];
+        auto& [bv, br] = tmp[i + 1];
+        use[av][ar] = use[bv][br] = 1;
+        result.push_back({av, cur, bv});
+    }
+    v[cur] = 1;
+}
+
+void run(){
+    cin >> n >> m; memset(lv, -1, sizeof(lv));
+    while(m--){
+        int s, e; cin >> s >> e;
+        int a = adj[s].size(), b = adj[e].size();
+        adj[s].push_back({e, b});
+        adj[e].push_back({s, a});
+        use[s].push_back(false);
+        use[e].push_back(false);
+    }
+
+    for(int i = 1;i <= n;i++){
+        if(lv[i] != -1) continue;
+        bfs(i); dfs(i);
+    }
+
+    cout << result.size() << "\n";
+    for(auto& [a, b, c] : result) cout << a << " " << b << " " << c << "\n";
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
