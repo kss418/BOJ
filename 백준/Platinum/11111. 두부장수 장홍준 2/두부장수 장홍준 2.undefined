@@ -32,8 +32,8 @@ public:
         edge(int nxt, int rev, F cap, C cost) : nxt(nxt), rev(rev), cap(cap), cost(cost) {}
     };
 private:
-    vector<vector<edge>> adj;
-    vector<C> dist, pot; vector<int> pv, pe;
+    vector<vector<edge>> adj; vector<C> dist, pot; 
+    vector<int> work, pv, pe; vector<bool> v;
     int n; bool use_spfa;
     void spfa(int st) {
         fill(all(pot), CINF);
@@ -74,15 +74,35 @@ private:
         }
         return true;
     }
+
+    F dfs(int cur, int en, F f){
+        if(cur == en) return f; v[cur] = 1;
+        for(int &i = work[cur]; i < (int)adj[cur].size(); i++){
+            auto &e = adj[cur][i];
+            if(e.cap <= 0) continue; int nxt = e.nxt;
+            if(e.cost + pot[cur] - pot[nxt] != 0) continue;
+            if(v[nxt]) continue; 
+            F now = dfs(nxt, en, min(f, e.cap));
+            if(now <= 0) continue;
+            e.cap -= now; v[cur] = 0;
+            adj[nxt][e.rev].cap += now;
+            return now;
+        }
+        v[cur] = 0; return 0;
+    }
 public:
     _mcmf(int n = 0, bool use_spfa = true) { clear(n, use_spfa); }
     void clear(int n, bool use_spfa = true) {
         this->n = n; this->use_spfa = use_spfa; adj.assign(n + 1, {});
         dist.assign(n + 1, CINF); pot.assign(n + 1, 0);
         pv.assign(n + 1, -1); pe.assign(n + 1, -1);
+        work.assign(n + 1, 0); v.assign(n + 1, 0);
     }
 
-    void addsol(int st, int en, F cap, C cost) {
+    void add(int st, int en, F cap, C cost){
+        addsol(st, en, cap, cost); addsol(en, st, cap, cost);
+    }
+    void addsol(int st, int en, F cap, C cost){
         int a = (int)adj[st].size(), b = (int)adj[en].size();
         adj[st].push_back({en, b, cap, cost});
         adj[en].push_back({st, a, 0, -cost});
@@ -92,18 +112,12 @@ public:
         F flow = 0; C cost = 0;
         if(use_spfa) spfa(st);
         while(flow < limit && dijkstra(st, en)) {
-            F add = limit - flow;
-            for (int v = en; v != st; v = pv[v]) {
-                auto &e = adj[pv[v]][pe[v]];
-                add = min(add, e.cap);
+            fill(all(work), 0);
+            while(flow < limit){
+                F now = dfs(st, en, limit - flow);
+                if(!now) break;
+                flow += now; cost += now * (pot[en] - pot[st]);
             }
-
-            for (int v = en; v != st; v = pv[v]) {
-                auto &e = adj[pv[v]][pe[v]];
-                auto &r = adj[v][e.rev];
-                e.cap -= add; r.cap += add;
-            }
-            flow += add; cost += add * (pot[en] - pot[st]);
         }
         return {flow, cost};
     }
@@ -132,7 +146,6 @@ void run(){
         for(int j = 0;j < m;j++){      
             mcmf.addsol(idx(i, j), n * m + 1, 1, 0);
             if((i + j) % 2) continue;
-
             for(int k = 0;k < 4;k++){
                 int ny = i + dy[k], nx = j + dx[k];
                 if(out(ny, nx)) continue;
