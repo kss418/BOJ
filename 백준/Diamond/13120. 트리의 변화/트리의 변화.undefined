@@ -1,0 +1,108 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 4101; // SET MAX SIZE
+constexpr ll MOD = 1e9 + 7;
+
+vector <int> adj[MAX];
+pll dp[MAX][MAX], tmp[MAX];
+int sz[MAX], ind[MAX], p[MAX];
+
+pll solve(int cur, int cnt){
+    pll& ret = dp[cur][cnt];
+    if(ret != pll(-1, -1)) return ret;
+
+    return ret;
+}
+
+void dfs(int cur, int pre = -1){
+    p[cur] = pre;
+    for(auto& nxt : adj[cur]){
+        if(pre == nxt) continue;
+        dfs(nxt, cur); ind[cur]++;
+    }
+}
+
+bool sq(ll x){
+    return x > 0 && (x & (x - 1)) == 0;
+}
+
+void run(){
+    cin >> n; 
+    for(int i = 1;i < n;i++){
+        int s, e; cin >> s >> e;
+        adj[s].push_back(e);
+        adj[e].push_back(s);
+    }
+
+    deque <int> q; dfs(1);
+    for(int i = 1;i <= n;i++){
+        if(!ind[i]) q.push_back(i);
+        sz[i] = 1; dp[i][1] = {0, 1};
+        for(int j = 2;j <= n;j++) dp[i][j] = {INF, 0};
+    }
+
+    while(!q.empty()){
+        auto cur = q.front(); q.pop_front();
+        int nxt = p[cur];
+        if(nxt == -1) continue;
+        for(int i = 1;i <= sz[cur] + sz[nxt];i++) tmp[i] = {INF, 0};
+
+        for(int i = 1;i <= sz[nxt];i++){
+            for(int j = 1;j <= sz[cur];j++){
+                pll a = dp[nxt][i], b = dp[cur][j];
+                pll now = {a.x + b.x, a.y * b.y};
+                if(tmp[i + j].x < now.x) continue;
+                
+                if(tmp[i + j].x == now.x) tmp[i + j].y += now.y;
+                else tmp[i + j] = now;
+
+                tmp[i + j].y %= MOD;
+            }
+
+            for(int j = 1;j <= sz[cur];j++){
+                if(!sq(j)) continue;
+                pll a = dp[nxt][i], b = dp[cur][j];
+                pll now = {a.x + b.x + 1, a.y * b.y};
+                if(tmp[i].x < now.x) continue;
+                
+                if(tmp[i].x == now.x) tmp[i].y += now.y;
+                else tmp[i] = now;
+
+                tmp[i].y %= MOD;
+            }
+        }
+
+        swap(dp[nxt], tmp);
+        sz[nxt] += sz[cur];
+        if(!--ind[nxt]) q.push_back(nxt);
+    }
+
+    ll mn = INF, result = 0;
+    for(int i = 1;i <= n;i++) if(sq(i)) mn = min(mn, dp[1][i].x);
+    for(int i = 1;i <= n;i++){
+        if(!sq(i)) continue;
+        if(dp[1][i].x != mn) continue;
+        result += dp[1][i].y;
+        result %= MOD;
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
