@@ -1,0 +1,65 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 1010101; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+bool v[MAX];
+deque <int> q;
+pll pre[MAX];
+int result;
+vector <int> tr;
+
+void run(){
+    cin >> n; memset(v, 0, sizeof(v));
+    if(n == 1){ cout << 1 << "\n"; return; }
+    q.clear(); tr.clear();
+    q.push_back(1); v[1] = 1;
+
+    while(!q.empty()){
+        auto cur = q.front(); q.pop_front();
+        if(!cur){ result = cur; break; }
+
+        int nxt = (10 * cur) % n;
+        if(!v[nxt]){
+            v[nxt] = 1;
+            pre[nxt] = {cur, 0};
+            q.push_back(nxt);
+        }
+
+        nxt = (10 * cur + 1) % n;
+        if(!v[nxt]){
+            v[nxt] = 1;
+            pre[nxt] = {cur, 1};
+            q.push_back(nxt);
+        }
+    }
+
+    if(result){ cout << "BRAK\n"; return; }
+    while(result != 1){
+        tr.push_back(pre[result].y);
+        result = pre[result].x;
+    }
+    tr.push_back(1);
+    reverse(all(tr));
+
+    for(auto& i : tr) cout << i;
+    cout << "\n";
+}
+
+int main() {
+    fastio; cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
