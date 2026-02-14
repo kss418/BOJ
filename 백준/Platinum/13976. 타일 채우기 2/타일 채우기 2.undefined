@@ -1,0 +1,166 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 201010; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+class _mint{
+public:
+    ll mod, v;
+    _mint(ll v = 0, ll mod = 1) : mod(mod), v(norm(v, mod)) {}
+    static ll norm(ll x, ll m){ x %= m; return x < 0 ? x + m : x; }
+    static tll gcd(ll a, ll b){
+        if (b == 0) return {a, 1, 0};
+        auto [g, x, y] = gcd(b, a % b);
+        return {g, y, x - (a / b) * y};
+    }
+
+    _mint inv() const{
+        assert(v);
+        auto [g, x, y] = gcd(v, mod);
+        assert(g == 1 || g == -1);
+        if(g == -1) x *= -1;
+        return _mint(x, mod);
+    }
+
+    _mint pow(ll e) const{
+        assert(e >= 0);
+        _mint base = *this, ret(1, mod);
+        while(e){
+            if(e & 1) ret *= base;
+            base *= base; e >>= 1ll;
+        }
+        return ret;
+    }
+
+    _mint& operator+=(const _mint& ot){
+        assert(mod == ot.mod);
+        v += ot.v;
+        if (v >= mod) v -= mod;
+        return *this;
+    }
+
+    _mint& operator-=(const _mint& ot){
+        assert(mod == ot.mod);
+        v -= ot.v;
+        if (v < 0) v += mod;
+        return *this;
+    }
+
+    _mint& operator*=(const _mint& ot){
+        assert(mod == ot.mod);
+        v = (ll)((i128)v * ot.v % mod);
+        return *this;
+    }
+    _mint& operator/=(const _mint& ot){ return (*this) *= ot.inv(); }
+
+    friend _mint operator+(_mint a, const _mint& b){ return a += b; }
+    friend _mint operator-(_mint a, const _mint& b){ return a -= b; }
+    friend _mint operator*(_mint a, const _mint& b){ return a *= b; }
+    friend _mint operator/(_mint a, const _mint& b){ return a /= b; }
+    _mint& operator+=(ll b){ return (*this) += _mint(b, mod); }
+    _mint& operator-=(ll b){ return (*this) -= _mint(b, mod); }
+    _mint& operator*=(ll b){ return (*this) *= _mint(b, mod); }
+    _mint& operator/=(ll b){ return (*this) /= _mint(b, mod); }
+    friend _mint operator+(_mint a, ll b){ return a += b; }
+    friend _mint operator-(_mint a, ll b){ return a -= b; }
+    friend _mint operator*(_mint a, ll b){ return a *= b; }
+    friend _mint operator/(_mint a, ll b){ return a /= b; }
+    friend ostream& operator<<(ostream& os, const _mint& a){ return os << a.v; }
+};
+
+class _mod_matrix{ // 0-based index, Require _mint
+public:
+    int n, m; ll mod; vector<_mint> arr;
+    _mod_matrix() : n(0), m(0), mod(1){}
+    _mod_matrix(int n, int m, ll mod = 998244353)
+        : n(n), m(m), mod(mod), arr(1LL * n * m, _mint(0, mod)) {}
+
+    _mint& at(int i, int j){ return arr[1LL * i * m + j]; }
+    const _mint& at(int i, int j) const{ return arr[1LL * i * m + j]; }
+    void add(int i, int j, ll v){ at(i, j) += v; }
+    void set(int i, int j, ll v){ at(i, j) = _mint(v, mod); }
+
+    static _mod_matrix id(int n, ll mod){
+        _mod_matrix ret(n, n, mod);
+        for(int i = 0; i < n; i++) ret.at(i, i) = _mint(1, mod);
+        return ret;
+    }
+
+    _mod_matrix operator*(const _mod_matrix& ot) const{
+        assert(m == ot.n);
+        assert(mod == ot.mod);
+        _mod_matrix ret(n, ot.m, mod);
+        for(int i = 0; i < n; i++){
+            for(int k = 0; k < m; k++){
+                const _mint v = at(i, k);
+                if(!v.v) continue;
+                for(int j = 0; j < ot.m; j++) ret.at(i, j) += v * ot.at(k, j);
+            }
+        }
+        return ret;
+    }
+
+    _mod_matrix operator+(const _mod_matrix& ot) const{
+        assert(n == ot.n && m == ot.m);
+        _mod_matrix ret(n, m, mod);
+        for(int i = 0; i < n * m; i++) ret.arr[i] = arr[i] + ot.arr[i];
+        return ret;
+    }
+
+    _mod_matrix pow(ll k) const{ // n*n matrix
+        assert(n == m); assert(k >= 0);
+        _mod_matrix base = *this, ret = id(n, mod);
+        while(k > 0){
+            if(k & 1) ret = ret * base;
+            base = base * base;
+            k >>= 1LL;
+        }
+        return ret;
+    }
+
+    _mod_matrix transpose() const{
+        _mod_matrix ret(m, n, mod);
+        for(int i = 0;i < n;i++) for(int j = 0;j < m;j++) ret.at(j, i) = at(i, j);
+        return ret;
+    }
+
+    friend ostream& operator<<(ostream& out, const _mod_matrix& cur){
+        for(int i = 0; i < cur.n; i++){
+            for(int j = 0; j < cur.m; j++) out << cur.at(i, j) << " ";
+            out << "\n";
+        }
+        return out;
+    }
+};
+
+void run(){
+    cin >> n; _mod_matrix a(10, 10, 1e9 + 7), b(10, 1, 1e9 + 7);
+    a.set(0, 1, 1); a.set(0, 3, 1); a.set(1, 0, 1); a.set(1, 4, 1);
+    a.set(1, 0, 1); a.set(1, 4, 1); a.set(2, 3, 1); a.set(0, 5, 1);
+    a.set(3, 0, 1); a.set(3, 2, 1); a.set(4, 1, 1);
+    
+    a.set(5, 0, 1); a.set(6, 1, 1);
+    a.set(7, 2, 1); a.set(8, 3, 1); a.set(9, 4, 1);
+    
+    b.set(0, 0, 1);
+    a = a.pow(n); a = a * b;
+    cout << a.at(0, 0).v;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
