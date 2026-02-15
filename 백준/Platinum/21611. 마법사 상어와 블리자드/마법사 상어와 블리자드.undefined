@@ -1,0 +1,150 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 55; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+int a[MAX][MAX], idx[MAX][MAX], result;
+pair<int, int> num[MAX * MAX];
+int dx[4] = {0, 0, -1, 1}, dy[4] = {-1, 1, 0, 0};
+
+int nxt_dir(int cur_dir){
+    if(cur_dir == 3) return 1;
+    if(cur_dir == 1) return 2;
+    if(cur_dir == 2) return 0;
+    return 3;
+}
+
+bool outrange(int cy, int cx){
+    return cy < 0 || cx < 0 || cy >= n || cx >= n || idx[cy][cx];
+}
+
+void init(){
+    int cnt = n * n - 2, cy = 0, cx = 0, dir = 3;
+    while(cy != n / 2 || cx != n / 2){
+        num[cnt] = {cy, cx};
+        idx[cy][cx] = cnt--;
+        int ny = cy + dy[dir], nx = cx + dx[dir];
+        if(!outrange(ny, nx)){
+            cy = ny; cx = nx;
+            continue;
+        }
+        
+        dir = nxt_dir(dir);
+        ny = cy + dy[dir]; nx = cx + dx[dir];
+        cy = ny; cx = nx;
+    }
+}
+
+string build_str(){
+    string ret;
+    for(int i = 0;i < n * n - 1;i++) ret.push_back(a[num[i].x][num[i].y] + '0');
+    return ret;
+}
+
+void apply(string& s){
+    while(s.size() < n * n - 1) s.push_back('0');
+    for(int i = 0;i < s.size();i++){
+        a[num[i].x][num[i].y] = s[i] - '0';
+    }
+}
+
+void compress(){
+    string tmp = build_str();
+    while(!tmp.empty() && tmp.back() == '0') tmp.pop_back();
+    while(tmp.find('0') != string::npos){
+        auto pos = tmp.find('0');
+        tmp.erase(pos, 1);
+    }
+
+    apply(tmp);
+}
+
+bool explose(){
+    string tmp = build_str(); int cnt = 0, pre = -1;
+    bool ret = 0;
+
+    for(int i = 0;i < tmp.size();i++){
+        if(pre != tmp[i]) pre = tmp[i], cnt = 1;
+        else{
+            cnt++;
+            if(cnt <= 3 || pre == '0') continue;
+            if(cnt == 4){
+                tmp[i - 1] = '0', tmp[i - 2] = '0', tmp[i - 3] = '0';
+                result += (pre - '0') * 3;
+            }
+
+            result += pre - '0';
+            tmp[i] = '0'; ret = 1;
+        }
+    }
+
+    apply(tmp);
+    compress();
+    return ret;
+}
+
+void transform(){
+    string tmp = build_str(); int cnt = 0, pre = -1;
+    string nxt;
+    for(auto& i : tmp){
+        if(pre != i){
+            if(pre != -1 && pre != '0'){
+                nxt.push_back(cnt + '0');
+                nxt.push_back(pre);
+            }
+            cnt = 1; pre = i;
+        }
+        else{
+            cnt++;
+        }
+    }
+
+    if(pre != -1 && pre != '0'){
+        nxt.push_back(cnt + '0');
+        nxt.push_back(pre);
+    }
+
+    while(nxt.size() > n * n - 2) nxt.pop_back();
+    apply(nxt); compress();
+}
+
+void run(){
+    cin >> n >> m;
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < n;j++) cin >> a[i][j];
+    }
+
+    init();
+    while(m--){
+        int d, v; cin >> d >> v; d--;
+        int cy = n / 2, cx = n / 2;
+        for(int i = 1;i <= v;i++){
+            cy += dy[d]; cx += dx[d];
+            a[cy][cx] = 0;
+        }
+
+        compress();
+        while(explose());
+        transform();
+    }
+
+    cout << result;
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
