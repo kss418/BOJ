@@ -1,0 +1,92 @@
+#include <bits/stdc++.h>
+#define fastio cin.tie(0), cout.tie(0), ios::sync_with_stdio(0);
+#define all(x) (x).begin(), (x).end()
+#define x first 
+#define y second
+using namespace std; using ll = long long; using u64 = uint64_t;
+using ld = long double; using pld = pair<ld, ld>;
+using i128 = __int128_t; using f128 = __float128; 
+using pll = pair<ll, ll>; using tll = tuple<ll, ll, ll>;
+ll n, m, k, t = 1; string s;
+
+constexpr ll INF = 0x3f3f3f3f3f3f3f3f;
+constexpr ll MINF = 0xc0c0c0c0c0c0c0c0;
+constexpr ll MAX = 11; // SET MAX SIZE
+constexpr ll MOD = 998244353;
+
+string st[MAX];
+int d[101][101];
+int num(int cy, int cx){
+    return cy * m + cx;
+}
+
+struct node{
+    int ir, ib;
+}; deque <node> q;
+
+pair <int, int> idx(int num){
+    return {num / m, num % m};
+}
+
+bool outrange(int cy, int cx){
+    return cy < 0 || cx < 0 || cy >= n || cx >= m || st[cy][cx] == '#';
+}
+
+int dx[4] = {0, 0, 1, -1}, dy[4] = {1, -1, 0, 0};
+int sr, sb, so;
+int move(int cur, int dir, int ot){
+    auto [cy, cx] = idx(cur);
+    while(1){
+        int ny = cy + dy[dir], nx = cx + dx[dir];
+        if(num(cy, cx) == so) return so;
+
+        if(outrange(ny, nx)) return num(cy, cx);
+        if(num(ny, nx) == so) return so;
+        if(num(ny, nx) == ot) return num(cy, cx);
+        cy = ny; cx = nx;
+    }
+}
+
+void run(){
+    cin >> n >> m; memset(d, 0x3f, sizeof(d));
+    for(int i = 0;i < n;i++){
+        cin >> st[i];
+        for(int j = 0;j < m;j++){
+            if(st[i][j] == '#') continue;
+            if(st[i][j] == 'R') sr = num(i, j);
+            if(st[i][j] == 'B') sb = num(i, j);
+            if(st[i][j] == 'O') so = num(i, j);
+        }
+    }
+
+    d[sr][sb] = 0; int result = 0x3f3f3f3f;
+    q.push_back({sr, sb});
+
+    while(!q.empty()){
+        auto [cr, cb] = q.front(); q.pop_front();
+        for(int i = 0;i < 4;i++){
+            int nr = cr, nb = cb;
+            nr = move(nr, i, nb);
+            nb = move(nb, i, nr);
+            nr = move(nr, i, nb);
+            nb = move(nb, i, nr);
+            if(d[nr][nb] <= d[cr][cb] + 1) continue;
+            if(nr == so){
+                if(nb != so) result = min(result, d[cr][cb] + 1);
+                continue;
+            }
+
+            q.push_back({nr, nb});
+            d[nr][nb] = d[cr][cb] + 1; 
+        }
+    }   
+
+    cout << (result == 0x3f3f3f3f ? -1 : result);
+}
+
+int main() {
+    fastio; // cin >> t;
+    while(t--) run(); 
+
+    return 0;
+}
